@@ -44,7 +44,9 @@ body {
   display: flex; align-items: center; gap: 8px;
   padding: 9px 16px 9px 12px; border-radius: 999px;
   font-size: 14px; letter-spacing: 0.2px; white-space: nowrap;
+  cursor: pointer; user-select: none; -webkit-user-select: none;
 }
+.brand-chip:active { transform: scale(0.97); }
 .brand-chip .dot {
   width: 26px; height: 26px; border-radius: 9px; display: grid; place-items: center;
   background: linear-gradient(135deg, var(--acc), var(--acc-d)); font-size: 15px;
@@ -57,6 +59,12 @@ body {
   position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 1000;
   display: flex; gap: 4px; padding: 6px; border-radius: 999px;
   max-width: calc(100vw - 200px);
+  transition: transform 0.28s ease, opacity 0.28s ease;
+}
+/* toolbar disembunyikan via klik chip SurveyKit */
+body.ui-hidden .toolbar {
+  transform: translateX(-50%) translateY(calc(-100% - 24px));
+  opacity: 0; pointer-events: none;
 }
 .tool-btn {
   border: none; background: transparent; color: var(--mut);
@@ -270,6 +278,7 @@ textarea { resize: vertical; font-family: var(--mono); font-size: 12.5px; }
   .brand-chip span { display: none; }
   .brand-chip { padding: 8px 12px 8px 9px; }
   .toolbar { max-width: calc(100vw - 28px); top: auto; bottom: 14px; }
+  body.ui-hidden .toolbar { transform: translateX(-50%) translateY(calc(100% + 24px)); }
   .tool-btn { padding: 8px 12px; font-size: 12px; }
   .tool-btn .lbl { display: none; }
   .tool-btn .ico svg { width: 20px; height: 20px; }

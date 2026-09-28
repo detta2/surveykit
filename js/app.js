@@ -9,11 +9,11 @@
   var DRAW_TOOLS = { profile: 'ToolProfile', contour: 'ToolContour', measure: 'ToolMeasure' };
 
   var TITLES = {
-    explore: '🛰️ Jelajah',
-    converter: '📍 Konverter Koordinat',
-    profile: '⛰️ Profil Ketinggian',
-    contour: '🗺️ Kontur Otomatis',
-    measure: '📐 Ukur Lahan & Cut-Fill'
+    explore: 'Jelajah',
+    converter: 'Konverter Koordinat',
+    profile: 'Profil Ketinggian',
+    contour: 'Kontur',
+    measure: 'Ukur Lahan & Cut-Fill'
   };
 
   function fmt(n, d) {
@@ -128,6 +128,22 @@
       b.addEventListener('click', function () { setTool(b.dataset.tool); });
     });
     document.getElementById('panel-close').addEventListener('click', closePanel);
+
+    // klik chip "SurveyKit" = sembunyikan/tampilkan toolbar (biar peta lega)
+    var brand = document.getElementById('brand-chip');
+    function toggleToolbar() {
+      var hidden = document.body.classList.toggle('ui-hidden');
+      brand.setAttribute('aria-pressed', hidden ? 'true' : 'false');
+      brand.title = hidden ? 'Tampilkan toolbar' : 'Sembunyikan toolbar';
+      if (hidden) {
+        var ts = document.getElementById('tool-search');
+        if (ts) ts.classList.remove('open'); // tutup kolom cari mobile
+      }
+    }
+    brand.addEventListener('click', toggleToolbar);
+    brand.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleToolbar(); }
+    });
 
     // mulai dalam mode jelajah
     document.querySelector('.panel-sec[data-panel="explore"]').classList.add('active');
