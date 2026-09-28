@@ -2,7 +2,7 @@
 (function () {
   'use strict';
   var G = window.Geo, K = window.Kml;
-  var inited = false, active = false, map = null, drawn = null, contourLayer = null;
+  var inited = false, active = false, map = null, drawn = null, contourLayer = null, contourHalo = null;
   var lastGrid = null, lastBbox = null;
   var pin = null, box = null, sizeK = 1, genSeq = 0, regenTimer = null;
 
@@ -111,6 +111,7 @@
     lastGrid = null; lastBbox = null;
     pin = null; box = null; sizeK = 1;
     if (contourLayer) { map.removeLayer(contourLayer); contourLayer = null; }
+    if (contourHalo) { map.removeLayer(contourHalo); contourHalo = null; }
     document.getElementById('ct-info').innerHTML = '<p class="hint">👆 Klik peta untuk menandai daerahmu.</p>';
     document.getElementById('ct-dl').style.display = 'none';
   }
@@ -178,10 +179,19 @@
     var fc = { type: 'FeatureCollection', features: features };
 
     if (contourLayer) map.removeLayer(contourLayer);
+    if (contourHalo) map.removeLayer(contourHalo);
+    // halo putih di bawah garis: biar kontur tetap kebaca di atas citra satelit yang gelap/ramai
+    contourHalo = L.geoJSON(fc, {
+      interactive: false,
+      style: function (f) {
+        var isIndex = Math.abs(f.properties.elev / interval % 5) < 1e-6;
+        return { color: '#ffffff', weight: (isIndex ? 2.4 : 1.3) + 3.2, opacity: 0.9, fill: false };
+      }
+    }).addTo(map);
     contourLayer = L.geoJSON(fc, {
       style: function (f) {
         var isIndex = Math.abs(f.properties.elev / interval % 5) < 1e-6;
-        return { color: isIndex ? '#b45309' : '#d97706', weight: isIndex ? 2.2 : 1, opacity: 0.85, fill: false };
+        return { color: isIndex ? '#b45309' : '#e8930c', weight: isIndex ? 2.4 : 1.3, opacity: 0.95, fill: false };
       },
       onEachFeature: function (f, layer) {
         layer.bindPopup('<b>Kontur ' + G.fmtNum(f.properties.elev, 1) + ' m</b>');
