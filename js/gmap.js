@@ -52,8 +52,86 @@
     });
     map.addControl(new Compass());
     L.control.scale({ imperial: false }).addTo(map);
+    initSearch(map);
     setTimeout(function () { map.invalidateSize(); }, 120);
     return map;
+  }
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  // ---- pencarian daerah kecil/besar (Nominatim OSM, gratis, khusus Indonesia) ----
+  function initSearch(map) {
+    var Search = L.Control.extend({
+      options: { position: 'topleft' },
+      onAdd: function () {
+        var el = L.DomUtil.create('div', 'search-ctl glass');
+        el.innerHTML = '<span class="s-ico">🔍</span>' +
+          '<input id="sk-search" type="search" placeholder="Cari daerah… cth: Lahat" autocomplete="off" aria-label="Cari daerah">' +
+          '<div id="sk-search-res" class="s-res"></div>';
+        L.DomEvent.disableClickPropagation(el);
+        L.DomEvent.disableScrollPropagation(el);
+        return el;
+      }
+    });
+    map.addControl(new Search());
+    var input = document.getElementById('sk-search');
+    var resBox = document.getElementById('sk-search-res');
+    var markLayer = L.layerGroup().addTo(map);
+    var timer = null;
+
+    function shortName(dn) { return String(dn).split(',')[0].trim(); }
+
+    function doSearch(q) {
+      if (q.length < 3) { resBox.style.display = 'none'; resBox.innerHTML = ''; return; }
+      resBox.innerHTML = '<div class="s-item s-loading">Mencari…</div>';
+      resBox.style.display = '';
+      fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=id&limit=6&accept-language=id&q=' + encodeURIComponent(q))
+        .then(function (r) { return r.json(); })
+        .then(function (arr) {
+          if (!arr || !arr.length) {
+            resBox.innerHTML = '<div class="s-item s-loading">Tidak ketemu. Coba kata kunci lain.</div>';
+            return;
+          }
+          resBox.innerHTML = arr.map(function (p, i) {
+            var rest = String(p.display_name).split(',').slice(1, 3).join(',').trim();
+            return '<div class="s-item" data-i="' + i + '">📍 <b>' + esc(shortName(p.display_name)) + '</b>' +
+              (rest ? '<span>' + esc(rest) + '</span>' : '') + '</div>';
+          }).join('');
+          Array.prototype.forEach.call(resBox.querySelectorAll('.s-item'), function (node) {
+            node.onclick = function () {
+              var p = arr[+node.getAttribute('data-i')];
+              var lat = parseFloat(p.lat), lon = parseFloat(p.lon);
+              markLayer.clearLayers();
+              L.marker([lat, lon]).addTo(markLayer)
+                .bindTooltip(esc(shortName(p.display_name)), { permanent: true, direction: 'top', offset: [0, -12], className: 'place-tip' });
+              var z = p.addresstype === 'county' || p.addresstype === 'state' ? 10 : 13;
+              map.flyTo([lat, lon], Math.max(map.getZoom(), z), { duration: 1.2 });
+              resBox.style.display = 'none';
+              input.blur();
+            };
+          });
+        })
+        .catch(function () {
+          resBox.innerHTML = '<div class="s-item s-loading">Gagal mencari. Coba lagi.</div>';
+        });
+    }
+
+    input.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () { doSearch(input.value.trim()); }, 450);
+    });
+    input.addEventListener('keydown', function (e) {
+      e.stopPropagation(); // jangan sampai panah keyboard menggeser peta
+      if (e.key === 'Enter') { clearTimeout(timer); doSearch(input.value.trim()); }
+      if (e.key === 'Escape') { resBox.style.display = 'none'; input.blur(); }
+    });
+    input.addEventListener('focus', function () {
+      if (resBox.innerHTML) resBox.style.display = '';
+    });
   }
 
   window.GMap = {
