@@ -189,24 +189,153 @@
     toast('File dimuat: ' + short);
   }
 
-  // ---------- export peta jadi PNG ----------
+  // ---------- export peta jadi PNG (renderer sendiri) ----------
+  // leaflet-image tidak dipakai: hang pada marker divIcon & tidak merender
+  // layer vektor Leaflet 1.9. Urutan gambar: tiles -> SVG vektor -> marker/tooltip.
+  var FONT = 'Inter, system-ui, -apple-system, sans-serif';
   function initExport() {
     var b = document.getElementById('lyr-export');
     if (!b) return;
-    b.addEventListener('click', function () {
-      if (typeof leafletImage !== 'function') { toast('Pustaka export belum termuat'); return; }
-      toast('Menyiapkan gambar…');
-      leafletImage(map, function (err, canvas) {
-        if (err || !canvas) { toast('Gagal membuat gambar'); return; }
-        try {
-          var a = document.createElement('a');
-          a.download = 'surveykit-' + Date.now() + '.png';
-          a.href = canvas.toDataURL('image/png');
-          document.body.appendChild(a); a.click(); a.remove();
-          toast('Gambar peta tersimpan');
-        } catch (e) { toast('Gagal menyimpan gambar'); }
-      });
+    b.addEventListener('click', exportPNG);
+  }
+  function drawPill(ctx, cx, cy, text, font, bg, fg, border) {
+    ctx.save();
+    ctx.font = font;
+    var pw = ctx.measureText(text).width + 14, ph = 18;
+    var x = cx - pw / 2, y = cy - ph / 2;
+    ctx.beginPath();
+    if (ctx.roundRect) ctx.roundRect(x, y, pw, ph, 9); else ctx.rect(x, y, pw, ph);
+    ctx.fillStyle = bg; ctx.fill();
+    if (border) { ctx.strokeStyle = border; ctx.lineWidth = 1; ctx.stroke(); }
+    ctx.fillStyle = fg; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, cx, cy + 0.5);
+    ctx.restore();
+  }
+  function drawPin(ctx, x, y) {
+    ctx.save();
+    ctx.fillStyle = '#3b82f6'; ctx.strokeStyle = '#1d4ed8'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.arc(x, y - 16, 10, 0, 7); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(x - 8.7, y - 11); ctx.lineTo(x, y); ctx.lineTo(x + 8.7, y - 11); ctx.closePath(); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(x, y - 16, 4, 0, 7); ctx.fillStyle = '#fff'; ctx.fill();
+    ctx.restore();
+  }
+  function exportPNG() {
+    toast('Menyiapkan gambar…');
+    var mapEl = document.getElementById('map');
+    var size = map.getSize();
+    var canvas = document.createElement('canvas');
+    canvas.width = Math.round(size.x); canvas.height = Math.round(size.y);
+    var ctx = canvas.getContext('2d');
+    var zoom = map.getZoom();
+    var origin = map.getPixelBounds().min; // sudut kiri-atas dalam world px
+    function toPx(latlng) { return map.project(latlng, zoom).subtract(origin); }
+
+    var finished = false;
+    var timer = setTimeout(function () { finalize(false); }, 25000);
+    function finalize(ok) {
+      if (finished) return; finished = true;
+      clearTimeout(timer);
+      if (!ok) { toast('Gagal membuat gambar'); return; }
+      try {
+        var a = document.createElement('a');
+        a.download = 'surveykit-' + Date.now() + '.png';
+        a.href = canvas.toDataURL('image/png');
+        document.body.appendChild(a); a.click(); a.remove();
+        toast('Gambar peta tersimpan');
+      } catch (e) { toast('Gagal menyimpan gambar'); }
+    }
+
+    // 1) tiles basemap
+    var tileLayers = [];
+    map.eachLayer(function (l) { if (l instanceof L.TileLayer) tileLayers.push(l); });
+    var jobs = [];
+    tileLayers.forEach(function (layer) {
+      if (zoom > layer.options.maxZoom || zoom < layer.options.minZoom) return;
+      var tso = layer.options.tileSize;
+      var ts = (tso instanceof L.Point) ? tso.x : (tso || 256);
+      var tbMin = map.getPixelBounds().min.divideBy(ts).floor();
+      var tbMax = map.getPixelBounds().max.divideBy(ts).floor();
+      for (var ty = tbMin.y; ty <= tbMax.y; ty++) {
+        for (var tx = tbMin.x; tx <= tbMax.x; tx++) {
+          var tp = new L.Point(tx, ty);
+          var urlTp = tp.clone();
+          if (layer._adjustTilePoint) layer._adjustTilePoint(urlTp);
+          if (urlTp.y < 0) continue;
+          var pos = tp.scaleBy(ts).subtract(origin);
+          jobs.push({ url: layer.getTileUrl(urlTp), x: pos.x, y: pos.y, s: ts });
+        }
+      }
     });
+    function afterTiles() { drawVectors(afterVectors); }
+    if (!jobs.length) { afterTiles(); }
+    else {
+      var pending = jobs.length;
+      jobs.forEach(function (j) {
+        var im = new Image();
+        im.crossOrigin = 'anonymous';
+        function doneOne() {
+          try { if (im.naturalWidth) ctx.drawImage(im, Math.floor(j.x), Math.floor(j.y), j.s, j.s); } catch (e) {}
+          if (--pending === 0) afterTiles();
+        }
+        im.onload = doneOne; im.onerror = doneOne;
+        im.src = j.url;
+      });
+    }
+
+    // 2) layer vektor (kontur, poligon ukur, graticule): rasterisasi SVG overlayPane
+    function drawVectors(cb) {
+      try {
+        var svg = map.getPanes().overlayPane.querySelector('svg');
+        if (!svg) return cb();
+        var xml = new XMLSerializer().serializeToString(svg);
+        var img = new Image();
+        img.onload = function () {
+          try {
+            var r = svg.getBoundingClientRect(), mr = mapEl.getBoundingClientRect();
+            ctx.drawImage(img, r.left - mr.left, r.top - mr.top, r.width, r.height);
+          } catch (e) {}
+          cb();
+        };
+        img.onerror = function () { cb(); };
+        img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(xml);
+      } catch (e) { cb(); }
+    }
+
+    // 3) marker & tooltip permanen digambar manual (divIcon tidak bisa dirasterisasi)
+    function afterVectors() {
+      map.eachLayer(function (l) {
+        try {
+          if (l instanceof L.Tooltip && l.options.permanent && l.getLatLng) {
+            var el = l.getElement(); if (!el) return;
+            var t = (el.textContent || '').trim(); if (!t) return;
+            var p = toPx(l.getLatLng());
+            drawPill(ctx, p.x, p.y - 24, t, '700 12.5px ' + FONT, 'rgba(13,20,34,.94)', '#fff', 'rgba(255,255,255,.16)');
+          } else if (l instanceof L.Marker) {
+            var m = toPx(l.getLatLng());
+            var isDiv = l.options.icon instanceof L.DivIcon;
+            if (!isDiv) { drawPin(ctx, m.x, m.y); return; }
+            var cls = (l.options.icon && l.options.icon.options.className) || '';
+            if (cls.indexOf('ct-label-wrap') !== -1) {
+              var mel = l.getElement();
+              var txt = mel ? (mel.textContent || '').trim() : '';
+              if (txt) drawPill(ctx, m.x, m.y, txt, '800 10px ' + FONT, 'rgba(11,21,38,.88)', '#ffd9a0', 'rgba(232,147,12,.65)');
+            } else if (cls.indexOf('gps-wrap') !== -1) {
+              ctx.save();
+              ctx.beginPath(); ctx.arc(m.x, m.y, 7, 0, 7);
+              ctx.fillStyle = '#3b82f6'; ctx.fill();
+              ctx.lineWidth = 2.5; ctx.strokeStyle = '#fff'; ctx.stroke();
+              ctx.restore();
+            } else {
+              ctx.save();
+              ctx.beginPath(); ctx.arc(m.x, m.y, 5, 0, 7);
+              ctx.fillStyle = '#38bdf8'; ctx.fill();
+              ctx.restore();
+            }
+          }
+        } catch (e) {}
+      });
+      finalize(true);
+    }
   }
 
   // ---------- bookmark lokasi ----------
