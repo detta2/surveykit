@@ -1,16 +1,39 @@
-/* contour.js — Tool Kontur Otomatis: TARIK KOTAK di peta -> kontur daerah itu */
+/* contour.js — Tool Kontur Otomatis: KONTUR MENGIKUTI TAMPILAN PETA (tanpa gambar) */
 (function () {
   'use strict';
   var G = window.Geo, K = window.Kml;
-  var inited = false, active = false, map = null, drawCtl = null, drawn = null, contourLayer = null;
-  var lastGrid = null, lastBbox = null, drawer = null;
+  var inited = false, active = false, map = null, drawn = null, contourLayer = null;
+  var lastGrid = null, lastBbox = null;
+  var followTimer = null, lastViewKey = '', genSeq = 0;
 
-  function onCreated(e) {
-    if (!active) return;
+  // bbox dari tampilan peta saat ini (dibatasi max 2 derajat agar DEM tidak overload)
+  function viewBbox() {
+    var b = map.getBounds(), c = b.getCenter();
+    var w = Math.min(b.getEast() - b.getWest(), 2);
+    var h = Math.min(b.getNorth() - b.getSouth(), 2);
+    return { west: c.lng - w / 2, east: c.lng + w / 2, south: c.lat - h / 2, north: c.lat + h / 2 };
+  }
+  function viewKey() {
+    var b = map.getBounds(), z = map.getZoom(), f = function (v) { return v.toFixed(2); };
+    return [f(b.getWest()), f(b.getSouth()), f(b.getEast()), f(b.getNorth()), z].join('|');
+  }
+  function refresh() {
+    lastViewKey = viewKey();
+    var bbox = viewBbox();
     drawn.clearLayers();
-    drawn.addLayer(e.layer);
-    var b = e.layer.getBounds();
-    generate({ west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() });
+    drawn.addLayer(L.rectangle(
+      [[bbox.south, bbox.west], [bbox.north, bbox.east]],
+      { color: '#2563eb', weight: 2, dashArray: '6 4', fillOpacity: 0.03 }
+    ));
+    generate(bbox);
+  }
+  function onMoveEnd() {
+    if (!active) return;
+    clearTimeout(followTimer);
+    followTimer = setTimeout(function () {
+      if (!active || viewKey() === lastViewKey) return;
+      refresh();
+    }, 900);
   }
 
   function init(sharedMap) {
@@ -18,19 +41,10 @@
     map = sharedMap;
     drawn = new L.FeatureGroup();
     map.addLayer(drawn);
-    drawCtl = new L.Control.Draw({
-      draw: {
-        rectangle: { shapeOptions: { color: '#2563eb', weight: 2, fillOpacity: 0.05 } },
-        polyline: false, polygon: false, circle: false, marker: false, circlemarker: false
-      },
-      edit: { featureGroup: drawn }
-    });
-    map.on(L.Draw.Event.CREATED, onCreated);
-    map.on(L.Draw.Event.DELETED, function () { if (active) clearContours(); });
-    drawer = new L.Draw.Rectangle(map, { shapeOptions: { color: '#2563eb', weight: 2, fillOpacity: 0.05 } });
     document.getElementById('ct-interval').addEventListener('change', function () {
       if (lastGrid) renderContours(lastGrid, effectiveInterval(lastGrid));
     });
+    document.getElementById('ct-refresh').onclick = refresh;
     document.getElementById('ct-geojson').onclick = downloadGeoJSON;
     document.getElementById('ct-kml').onclick = downloadKML;
     document.getElementById('ct-clear').onclick = function () { drawn.clearLayers(); clearContours(); };
@@ -38,13 +52,14 @@
 
   function activate() {
     active = true;
-    if (!drawCtl._map) map.addControl(drawCtl);
-    if (drawer) drawer.enable(); // langsung tarik kotak: lepas = kontur daerah itu dibuat
+    lastViewKey = ''; // paksa generate ulang saat tab dibuka
+    map.on('moveend', onMoveEnd);
+    refresh();
   }
   function deactivate() {
     active = false;
-    if (drawer && drawer.enabled()) drawer.disable();
-    map.removeControl(drawCtl);
+    clearTimeout(followTimer);
+    map.off('moveend', onMoveEnd);
   }
 
   // interval otomatis: target ~12 garis, dibulatkan ke 1/2/5 x 10^n
@@ -72,18 +87,21 @@
   function clearContours() {
     lastGrid = null; lastBbox = null;
     if (contourLayer) { map.removeLayer(contourLayer); contourLayer = null; }
-    document.getElementById('ct-info').innerHTML = '<p class="hint">Tarik kotak di peta untuk memilih daerah — lepas, kontur langsung dibuat.</p>';
+    document.getElementById('ct-info').innerHTML = '<p class="hint">Geser/zoom peta ke daerahmu — garis kontur otomatis dibuat mengikuti tampilan peta.</p>';
     document.getElementById('ct-dl').style.display = 'none';
   }
 
   function generate(bbox) {
     var info = document.getElementById('ct-info');
     info.innerHTML = '<p class="hint">⏳ Mengambil data DEM & menghitung kontur…</p>';
+    var seq = ++genSeq;
     var z = G.chooseZoomForBbox(bbox, 480);
     G.fetchElevationGrid(bbox, z).then(function (grid) {
+      if (seq !== genSeq || !active) return; // abaikan hasil basi
       lastGrid = grid; lastBbox = bbox;
       renderContours(grid, effectiveInterval(grid));
     }).catch(function (err) {
+      if (seq !== genSeq || !active) return;
       info.innerHTML = '<p class="hint err-text">Gagal: ' + K.esc(err.message) + '</p>';
     });
   }

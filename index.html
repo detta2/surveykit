@@ -43,7 +43,7 @@
         <ul class="tool-list">
           <li>📐 <b>Ukur Lahan</b> — klik sudut-sudut batas lahan, tekan ✓ Selesai</li>
           <li>⛰️ <b>Profil</b> — klik 2 titik (A → B)</li>
-          <li>🗺️ <b>Kontur</b> — tarik kotak daerahnya, kontur langsung jadi</li>
+          <li>🗺️ <b>Kontur</b> — otomatis ngikutin tampilan peta</li>
           <li>📍 <b>Koordinat</b> — konversi LatLon ↔ UTM</li>
         </ul>
       </div>
@@ -110,7 +110,10 @@
     <section class="panel-sec" data-panel="contour">
       <div class="card">
         <h2>🗺️ Kontur Otomatis</h2>
-        <p class="desc"><b>Tarik kotak di peta</b> untuk memilih daerah — lepas, garis kontur langsung dibuat untuk daerah itu.</p>
+        <p class="desc"><b>Geser & zoom peta</b> ke daerah yang kamu mau — garis kontur <b>otomatis dibuat</b> mengikuti tampilan peta. Tanpa gambar apa-apa.</p>
+        <div class="btn-row" style="margin-bottom:10px;">
+          <button class="btn" id="ct-refresh">🔄 Buat ulang untuk peta saat ini</button>
+        </div>
         <div class="form-row">
           <label>Interval garis kontur
             <select id="ct-interval">
@@ -124,7 +127,7 @@
           </label>
           <button class="btn secondary" id="ct-clear">🗑 Hapus</button>
         </div>
-        <div id="ct-info"><p class="hint">Tarik kotak di peta untuk memilih daerah — lepas, kontur langsung dibuat.</p></div>
+        <div id="ct-info"><p class="hint">Geser/zoom peta ke daerahmu — garis kontur otomatis dibuat mengikuti tampilan peta.</p></div>
         <div id="ct-dl" class="btn-row" style="display:none; margin-top:12px;">
           <button class="btn secondary" id="ct-geojson">⬇ Unduh GeoJSON</button>
           <button class="btn secondary" id="ct-kml">⬇ Unduh KML</button>
