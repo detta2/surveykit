@@ -88,7 +88,7 @@
           }
           resBox.innerHTML = arr.map(function (p, i) {
             var rest = String(p.display_name).split(',').slice(1, 3).join(',').trim();
-            return '<div class="s-item" data-i="' + i + '">📍 <b>' + esc(shortName(p.display_name)) + '</b>' +
+            return '<div class="s-item" data-i="' + i + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:13px;height:13px;vertical-align:-2px;margin-right:5px;color:var(--acc)"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><b>' + esc(shortName(p.display_name)) + '</b>' +
               (rest ? '<span>' + esc(rest) + '</span>' : '') + '</div>';
           }).join('');
           Array.prototype.forEach.call(resBox.querySelectorAll('.s-item'), function (node) {
