@@ -166,7 +166,15 @@
     });
   }
 
-  window.CoordFmt = { enabled: enabled, cardsHTML: cardsHTML, popupHTML: popupHTML, renderChips: renderChips };
+  // dipakai kartu koordinat (ketuk buat salin)
+  function formatValues(lat, lon) {
+    return enabled().map(function (id) {
+      var f = byId(id);
+      return f ? { label: f.label, value: f.fn(lat, lon) } : null;
+    }).filter(Boolean);
+  }
+
+  window.CoordFmt = { enabled: enabled, cardsHTML: cardsHTML, popupHTML: popupHTML, renderChips: renderChips, formats: formatValues };
 
   /* ---------- UI titik tunggal ---------- */
   function renderSingle() {

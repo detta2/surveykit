@@ -94,7 +94,7 @@
     var box = document.getElementById('lyr-list');
     if (!box) return;
     if (!entries.length) {
-      box.innerHTML = '<p class="hint">Belum ada layer. Hasil kontur, ukur lahan, profil, file yang diimpor, dan posisi GPS bakal muncul di sini.</p>';
+      box.innerHTML = '<p class="hint">Belum ada apa-apa di peta. Hasil ukur, kontur, file yang ditambah, dan posisi GPS bakal muncul di sini.</p>';
       return;
     }
     box.innerHTML = entries.map(function (e) {
@@ -371,13 +371,23 @@
     list.innerHTML = arr.length ? arr.map(function (b, i) {
       return '<div class="bm-row">' +
         '<button class="bm-go" data-bm="' + i + '" data-act="go" title="Buka lokasi ini">' + PIN + '<span>' + esc(b.name) + '</span></button>' +
-        '<button class="bm-del" data-bm="' + i + '" data-act="del" title="Hapus bookmark">✕</button></div>';
-    }).join('') : '<p class="hint">Belum ada yang tersimpan. Arahkan peta ke lokasi favorit, kasih nama, terus simpan.</p>';
+        '<button class="bm-del" data-bm="' + i + '" data-act="del" title="Hapus">✕</button></div>';
+    }).join('') : '<p class="hint">Belum ada yang disimpan. Arahkan peta ke lokasi favorit, kasih nama, terus simpan.</p>';
+  }
+
+  // dipakai kartu koordinat: simpan titik tanpa buka panel
+  function addBookmark(name, lat, lon, z) {
+    var arr = getBMs();
+    arr.push({ name: name, lat: +lat.toFixed(6), lon: +lon.toFixed(6), z: z || (map ? map.getZoom() : 13) });
+    setBMs(arr);
+    renderBMs();
+    toast('Lokasi tersimpan: ' + name);
   }
 
   window.LayerManager = {
     init: init, register: register, unregister: unregister,
     toggle: toggle, remove: removeEntry, setOpacity: setOpacity,
+    addBookmark: addBookmark,
     count: function () { return entries.length; }
   };
 })();

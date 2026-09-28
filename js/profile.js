@@ -202,5 +202,15 @@
     }]), 'application/vnd.google-earth.kml+xml');
   }
 
-  window.ToolProfile = { init: init, activate: activate, deactivate: deactivate };
+  // dipakai modul Ukur gabungan: langsung analisis sepasang titik A-B
+  function analyzePair(latlngs) {
+    clearAll();
+    latlngs.forEach(function (p, i) {
+      drawn.addLayer(ptChip(p, i === 0 ? 'A' : 'B', i === 0 ? '#16a34a' : '#e11d48'));
+    });
+    drawn.addLayer(L.polyline(latlngs, { color: '#e11d48', weight: 4 }));
+    analyze(latlngs);
+  }
+
+  window.ToolProfile = { init: init, activate: activate, deactivate: deactivate, analyzePair: analyzePair, reset: clearAll };
 })();

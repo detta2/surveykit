@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SurveyKit — Peta & Toolkit Surveyor</title>
-<meta name="description" content="Peta satelit interaktif untuk surveyor, engineering & pemilik lahan: ukur luas lahan, profil ketinggian, kontur otomatis & konverter koordinat UTM — langsung di browser, gratis.">
+<title>SurveyKit — Peta & Alat Ukur Lapangan</title>
+<meta name="description" content="Peta satelit interaktif untuk surveyor & pemilik lahan: ketuk peta dapat koordinat, ukur jarak & luas, profil tanah, garis kontur otomatis — langsung di browser, gratis.">
 <meta name="theme-color" content="#0b1220">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,108 +16,124 @@
 </head>
 <body>
 
-<div class="brand-chip glass" id="brand-chip" role="button" tabindex="0" aria-pressed="false" title="Sembunyikan toolbar"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span><b>SurveyKit</b></div>
-<nav class="toolbar glass" role="tablist" aria-label="Alat">
-  <button class="tool-btn active" data-tool="explore" role="tab"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg></span><span class="lbl">Jelajah</span></button>
-  <button class="tool-btn" data-tool="converter" role="tab"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span><span class="lbl">Koordinat</span></button>
-  <button class="tool-btn" data-tool="profile" role="tab"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg></span><span class="lbl">Profil</span></button>
-  <button class="tool-btn" data-tool="contour" role="tab"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-4.2 0-7.5 4-7.5 9s3.3 9 7.5 9 7.5-4 7.5-9S16.2 3 12 3Z"/><path d="M12 7.2c-2.3 0-4.1 2.1-4.1 4.8s1.8 4.8 4.1 4.8 4.1-2.1 4.1-4.8-1.8-4.8-4.1-4.8Z"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span><span class="lbl">Kontur</span></button>
-  <button class="tool-btn" data-tool="measure" role="tab"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg></span><span class="lbl">Ukur Lahan</span></button>
-  <button class="tool-btn" data-tool="layers" role="tab"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span><span class="lbl">Layer</span></button>
-  <div class="tool-search" id="tool-search">
-    <button class="s-toggle" id="sk-search-toggle" aria-label="Cari daerah"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
-    <input id="sk-search" type="search" placeholder="Cari tempat / koordinat…" autocomplete="off" aria-label="Cari tempat atau koordinat">
+<!-- bar atas: brand + cari + bantuan -->
+<header id="topbar">
+  <div class="brand-chip glass" id="brand-chip" role="button" tabindex="0" aria-pressed="false" title="Sembunyikan / tampilkan menu"><span class="dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span><b>SurveyKit</b></div>
+  <div class="search-wrap glass" id="search-wrap">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+    <input id="sk-search" type="search" placeholder="Cari tempat / ketik koordinat…" autocomplete="off" aria-label="Cari tempat atau koordinat">
     <div id="sk-search-res" class="s-res"></div>
   </div>
-</nav>
+  <button id="help-btn" class="icon-btn glass" aria-label="Panduan cara pakai">?</button>
+</header>
 
 <div id="map"></div>
-<div id="coords" class="map-readout">Geser kursor di peta untuk koordinat · klik titik untuk LatLon + UTM</div>
+<div id="coords" class="map-readout glass">Ketuk peta buat liat koordinat titik itu</div>
+<div id="hintbar" class="glass" style="display:none"></div>
 
-<aside id="panel">
-  <div class="panel-head">
-    <b id="panel-title">Jelajah</b>
-    <button id="panel-close" aria-label="Tutup panel">✕</button>
+<!-- dock alat: 4 tombol besar -->
+<nav id="dock" class="glass" aria-label="Alat">
+  <button class="dock-btn active" data-tool="coord"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><span>Koordinat</span></button>
+  <button class="dock-btn" data-tool="ukur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg><span>Ukur</span></button>
+  <button class="dock-btn" data-tool="kontur"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-4.2 0-7.5 4-7.5 9s3.3 9 7.5 9 7.5-4 7.5-9S16.2 3 12 3Z"/><path d="M12 7.2c-2.3 0-4.1 2.1-4.1 4.8s1.8 4.8 4.1 4.8 4.1-2.1 4.1-4.8-1.8-4.8-4.1-4.8Z"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg><span>Kontur</span></button>
+  <button class="dock-btn" data-tool="simpan"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><span>Tersimpan</span></button>
+</nav>
+
+<!-- lembar alat -->
+<div id="sheet" class="glass">
+  <div class="sheet-head">
+    <b id="sheet-title">Koordinat</b>
+    <button id="sheet-close" aria-label="Tutup">✕</button>
   </div>
-  <div class="panel-body">
+  <div class="sheet-body">
 
-    <section class="panel-sec" data-panel="explore">
+    <div class="toolpane active" data-pane="coord">
       <div class="card">
-        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg></span> Jelajah</h2>
-        <p class="desc">Citra satelit seluruh Indonesia. <b>Cari daerah</b> di toolbar atas (cth: Lahat), atau klik titik mana saja untuk melihat koordinat.</p>
-        <p class="hint">Pilih alat di toolbar atas, lalu <b>gambar langsung di peta ini</b>:</p>
-        <ul class="tool-list">
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg> <b>Ukur Lahan</b> — klik sudut-sudut batas lahan, tekan ✓ Selesai</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg> <b>Profil</b> — klik 2 titik (A → B)</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-4.2 0-7.5 4-7.5 9s3.3 9 7.5 9 7.5-4 7.5-9S16.2 3 12 3Z"/><path d="M12 7.2c-2.3 0-4.1 2.1-4.1 4.8s1.8 4.8 4.1 4.8 4.1-2.1 4.1-4.8-1.8-4.8-4.1-4.8Z"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg> <b>Kontur</b> — tandai daerahmu (klik 1x), kotak bisa digeser</li>
-          <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg> <b>Koordinat</b> — konversi LatLon ↔ UTM/MGRS/Plus Code/dll</li>
-        </ul>
-      </div>
-      <p class="fine">Data elevasi: SRTM via AWS Terrain Tiles · citra: Esri · peta: OpenStreetMap.<br>Hasil bersifat estimasi untuk survei awal.</p>
-    </section>
-
-    <section class="panel-sec" data-panel="converter">
-      <div class="card">
-        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span> Konverter Koordinat</h2>
-        <p class="desc">Ubah Lintang/Bujur ↔ UTM, MGRS, Plus Code, Geohash, dll. Pilih format yang mau ditampilkan:</p>
+        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span> Koordinat</h2>
+        <p class="desc"><b>Ketuk titik mana saja di peta</b> — koordinatnya langsung muncul di sini.</p>
+        <div id="cc-result"><p class="hint">Belum ada titik. Ketuk peta dulu.</p></div>
         <div class="fmt-chips" id="cv-fmts"></div>
-        <h3>LatLon → semua format</h3>
-        <div class="form-row">
-          <label>Lintang <input id="cv-lat" placeholder="cth: -6.2 atau 6°12'0&quot;S"></label>
-          <label>Bujur <input id="cv-lon" placeholder="cth: 106.8 atau 106°48'0&quot;T"></label>
+        <button class="btn secondary btn-block" id="cc-manual-toggle" style="margin-top:10px">⌨ Ketik sendiri / dari file CSV</button>
+        <div id="cc-manual" style="display:none; margin-top:14px;">
+          <h3>LatLon → semua format</h3>
+          <div class="form-row">
+            <label>Lintang <input id="cv-lat" placeholder="cth: -6.2"></label>
+            <label>Bujur <input id="cv-lon" placeholder="cth: 106.8"></label>
+          </div>
+          <div class="btn-row">
+            <button class="btn" id="cv-go1">Konversi</button>
+            <button class="btn secondary" id="cv-pick">📍 Ambil dari peta</button>
+          </div>
+          <div id="cv-out" class="out"></div>
+          <h3>UTM → semua format</h3>
+          <div class="form-row">
+            <label>Easting (m) <input id="cv-e" placeholder="cth: 702345"></label>
+            <label>Northing (m) <input id="cv-n" placeholder="cth: 9312345"></label>
+            <label>Zona <select id="cv-zone"></select></label>
+            <button class="btn" id="cv-go2">Konversi</button>
+          </div>
+          <div id="cv-out2" class="out"></div>
+          <h3>📄 Banyak titik sekaligus (CSV)</h3>
+          <p class="desc">Format: <code>nama;lintang;bujur</code> atau <code>nama;easting;northing;zona</code> (cth zona: 48S).</p>
+          <div class="form-row">
+            <label>Arah
+              <select id="cv-dir">
+                <option value="ll2utm">LatLon → UTM</option>
+                <option value="utm2ll">UTM → LatLon</option>
+              </select>
+            </label>
+            <label>Upload file <input type="file" id="cv-file" accept=".csv,.txt"></label>
+            <button class="btn" id="cv-run">Proses</button>
+          </div>
+          <textarea id="cv-csv" rows="5" placeholder="nama;lintang;bujur&#10;Patok A;-6.2146;106.8451&#10;Patok B;-6.2150;106.8460"></textarea>
+          <div id="cv-batch-out" class="out"></div>
         </div>
-        <div class="btn-row">
-          <button class="btn" id="cv-go1">Konversi</button>
-          <button class="btn secondary" id="cv-pick">📍 Ambil dari peta</button>
-        </div>
-        <div id="cv-out" class="out"></div>
-        <h3>UTM → semua format</h3>
-        <div class="form-row">
-          <label>Easting (m) <input id="cv-e" placeholder="cth: 702345"></label>
-          <label>Northing (m) <input id="cv-n" placeholder="cth: 9312345"></label>
-          <label>Zona <select id="cv-zone"></select></label>
-          <button class="btn" id="cv-go2">Konversi</button>
-        </div>
-        <div id="cv-out2" class="out"></div>
       </div>
-      <div class="card">
-        <h2>📄 Konversi banyak titik (CSV)</h2>
-        <p class="desc">Format: <code>nama;lintang;bujur</code> atau <code>nama;easting;northing;zona</code> (cth zona: 48S).</p>
-        <div class="form-row">
-          <label>Arah
-            <select id="cv-dir">
-              <option value="ll2utm">LatLon → UTM</option>
-              <option value="utm2ll">UTM → LatLon</option>
-            </select>
-          </label>
-          <label>Upload file <input type="file" id="cv-file" accept=".csv,.txt"></label>
-          <button class="btn" id="cv-run">Proses</button>
-        </div>
-        <textarea id="cv-csv" rows="6" placeholder="nama;lintang;bujur&#10;Patok A;-6.2146;106.8451&#10;Patok B;-6.2150;106.8460"></textarea>
-        <div id="cv-batch-out" class="out"></div>
-      </div>
-    </section>
+      <p class="fine">Ketuk kotaknya buat menyalin. Format yang tampil bisa dipilih lewat chip di atas.</p>
+    </div>
 
-    <section class="panel-sec" data-panel="profile">
+    <div class="toolpane" data-pane="ukur">
       <div class="card">
-        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg></span> Profil</h2>
-        <p class="desc"><b>Ketuk 2 titik di peta</b>: titik awal (A), terus titik akhir (B) — profil garis lurus langsung dihitung dari DEM satelit (SRTM).</p>
-        <div id="pf-stats"><p class="hint">Klik 2 titik di peta: titik awal (A), lalu titik akhir (B).</p></div>
-        <div id="pf-chart-wrap" style="display:none; position:relative;">
-          <canvas id="pf-chart"></canvas>
-          <div id="pf-tip" class="chart-tip" style="display:none;"></div>
+        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg></span> Ukur</h2>
+        <p class="desc"><b>Ketuk titik-titik di peta.</b> 2 titik = jarak &amp; profil tanah. 3 titik atau lebih = luas lahan.</p>
+        <div id="uk-status"><p class="hint">Ketuk titik pertama di peta…</p></div>
+        <div class="btn-row" style="margin-top:10px">
+          <button class="btn" id="uk-finish">✓ Selesai</button>
+          <button class="btn secondary" id="uk-undo">↩ Urungkan</button>
+          <button class="btn secondary" id="uk-clear">🗑 Hapus</button>
         </div>
-        <div id="pf-dl" class="btn-row" style="display:none; margin-top:12px;">
-          <button class="btn secondary" id="pf-csv">⬇ Simpan CSV</button>
-          <button class="btn secondary" id="pf-kml">⬇ Simpan KML</button>
+        <div id="uk-result"></div>
+        <div id="uk-profile" style="display:none">
+          <h3>Profil tanah</h3>
+          <div id="pf-stats"></div>
+          <div id="pf-chart-wrap" style="display:none; position:relative;">
+            <canvas id="pf-chart"></canvas>
+            <div id="pf-tip" class="chart-tip" style="display:none;"></div>
+          </div>
+          <div id="pf-dl" class="btn-row" style="display:none; margin-top:12px;">
+            <button class="btn secondary" id="pf-csv">⬇ Simpan CSV</button>
+            <button class="btn secondary" id="pf-kml">⬇ Simpan KML</button>
+          </div>
+        </div>
+        <div id="uk-area" style="display:none">
+          <div id="ms-basic"></div>
+          <div id="ms-dem" class="out"></div>
+          <div id="ms-cutfill" style="display:none; margin-top:12px;">
+            <h3>Estimasi galian &amp; timbunan</h3>
+            <div class="form-row">
+              <label>Elevasi rencana (m) <input id="ms-target" type="number" step="0.1"></label>
+              <button class="btn" id="ms-calc">Hitung volume</button>
+            </div>
+            <div id="ms-cf-out" class="out"></div>
+          </div>
         </div>
       </div>
-    </section>
+    </div>
 
-    <section class="panel-sec" data-panel="contour">
+    <div class="toolpane" data-pane="kontur">
       <div class="card">
         <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-4.2 0-7.5 4-7.5 9s3.3 9 7.5 9 7.5-4 7.5-9S16.2 3 12 3Z"/><path d="M12 7.2c-2.3 0-4.1 2.1-4.1 4.8s1.8 4.8 4.1 4.8 4.1-2.1 4.1-4.8-1.8-4.8-4.1-4.8Z"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span> Kontur</h2>
-        <p class="desc">👆 <b>Klik peta untuk menandai daerahmu</b> — pin jatuh sebagai tanda, kontur langsung dibuat untuk daerah itu. <b>Geser pin</b> untuk pindah, atur lebar kotak sesukamu.</p>
+        <p class="desc">👆 <b>Ketuk peta buat menandai daerahmu</b> — pin jatuh sebagai tanda, garis kontur langsung dibuat. <b>Geser pin</b> buat pindah.</p>
         <div class="btn-row" style="margin-bottom:10px;">
           <button class="btn secondary" id="ct-smaller">➖ Perkecil area</button>
           <button class="btn secondary" id="ct-bigger">➕ Perbesar area</button>
@@ -135,57 +151,50 @@
           </label>
           <button class="btn secondary" id="ct-clear">🗑 Hapus</button>
         </div>
-        <div id="ct-info"><p class="hint">👆 Klik peta untuk menandai daerahmu.</p></div>
+        <div id="ct-info"><p class="hint">👆 Ketuk peta buat menandai daerahmu.</p></div>
         <div id="ct-dl" class="btn-row" style="display:none; margin-top:12px;">
           <button class="btn secondary" id="ct-geojson">⬇ Simpan GeoJSON</button>
           <button class="btn secondary" id="ct-kml">⬇ Simpan KML</button>
         </div>
       </div>
-    </section>
+    </div>
 
-    <section class="panel-sec" data-panel="measure">
+    <div class="toolpane" data-pane="simpan">
       <div class="card">
-        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg></span> Ukur Lahan & Cut-Fill</h2>
-        <p class="desc"><b>Klik tiap sudut lahan</b> di citra satelit, lalu tekan <b>✓ Selesai & Hitung</b>.</p>
-        <div class="btn-row" style="margin-bottom:10px;">
-          <button class="btn" id="ms-finish">✓ Selesai & Hitung</button>
-        </div>
-        <div id="ms-basic"><p class="hint">Klik tiap sudut lahan di citra satelit, lalu tekan <b>✓ Selesai & Hitung</b>.</p></div>
-        <div id="ms-dem" class="out"></div>
-        <div id="ms-cutfill" style="display:none; margin-top:12px;">
-          <h3>Estimasi Cut & Fill</h3>
-          <div class="form-row">
-            <label>Elevasi rencana (m) <input id="ms-target" type="number" step="0.1"></label>
-            <button class="btn" id="ms-calc">Hitung Volume</button>
-          </div>
-          <div id="ms-cf-out" class="out"></div>
-        </div>
-      </div>
-    </section>
-
-    <section class="panel-sec" data-panel="layers">
-      <div class="card">
-        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span> Layer</h2>
-        <p class="desc">Atur layer di peta — tampil/sembunyi, transparansi, hapus.</p>
+        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg></span> Tersimpan</h2>
+        <p class="desc">Semua yang ada di petamu — hasil ukur, kontur, file, lokasi favorit. Ketuk 👁 buat sembunyikan.</p>
         <div id="lyr-list"></div>
         <div class="lyr-actions">
-          <label class="btn-file" title="Import SHP / KML / GeoJSON / GPX">＋ Tambah file<input type="file" id="lyr-file" accept=".geojson,.json,.kml,.gpx,.zip,.shp" multiple hidden></label>
+          <label class="btn-file btn secondary" title="Import SHP / KML / GeoJSON / GPX">＋ Tambah file<input type="file" id="lyr-file" accept=".geojson,.json,.kml,.gpx,.zip,.shp" multiple hidden></label>
           <button class="btn secondary" id="lyr-export">⬇ Simpan PNG</button>
         </div>
         <p class="hint">Atau seret file peta (SHP/KML/GeoJSON/GPX) langsung ke atas peta.</p>
       </div>
       <div class="card">
-        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span> Bookmark</h2>
+        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span> Lokasi favorit</h2>
         <div class="bm-add">
-          <input id="bm-name" type="text" placeholder="Nama lokasi…" maxlength="40" aria-label="Nama bookmark">
-          <button class="btn" id="bm-save">＋ Simpan lokasi ini</button>
+          <input id="bm-name" type="text" placeholder="Nama lokasi…" maxlength="40" aria-label="Nama lokasi favorit">
+          <button class="btn" id="bm-save">＋ Simpan</button>
         </div>
         <div id="bm-list"></div>
       </div>
-    </section>
+    </div>
 
   </div>
-</aside>
+</div>
+
+<!-- panduan -->
+<div id="help" style="display:none">
+  <div class="help-box glass">
+    <h2>Cara pakai</h2>
+    <div class="help-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg><div><b>Koordinat</b><p>Ketuk peta, koordinat titik itu langsung muncul. Ketuk kotaknya buat menyalin.</p></div></div>
+    <div class="help-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg><div><b>Ukur</b><p>Ketuk titik-titik di peta, terus tekan ✓ Selesai. 2 titik = jarak + profil tanah. 3 titik atau lebih = luas lahan + hitung galian/timbunan.</p></div></div>
+    <div class="help-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-4.2 0-7.5 4-7.5 9s3.3 9 7.5 9 7.5-4 7.5-9S16.2 3 12 3Z"/><path d="M12 7.2c-2.3 0-4.1 2.1-4.1 4.8s1.8 4.8 4.1 4.8 4.1-2.1 4.1-4.8-1.8-4.8-4.1-4.8Z"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg><div><b>Kontur</b><p>Ketuk peta buat menandai daerah, garis kontur langsung jadi. Geser pin-nya buat pindah daerah.</p></div></div>
+    <div class="help-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg><div><b>Tersimpan</b><p>Semua hasil ukur, file yang kamu tambah, dan lokasi favorit ada di sini. Ketuk ikon mata buat sembunyikan dari peta.</p></div></div>
+    <button class="btn btn-block" id="help-close">Mengerti!</button>
+    <p class="fine" style="margin-top:10px">Kolom atas bisa dipakai buat cari daerah — bisa juga ketik koordinat langsung, cth: <b>-6.2, 106.8</b> atau <b>48S 702305 9317059</b>.</p>
+  </div>
+</div>
 
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
@@ -198,11 +207,11 @@
 <script src="js/graticule.js"></script>
 <script src="js/gmap.js"></script>
 <script src="js/layers.js"></script>
-<script src="js/quickmeasure.js"></script>
 <script src="js/converter.js"></script>
 <script src="js/profile.js"></script>
-<script src="js/contour.js"></script>
 <script src="js/measure.js"></script>
+<script src="js/contour.js"></script>
+<script src="js/ukur.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

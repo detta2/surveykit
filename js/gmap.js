@@ -129,10 +129,10 @@
     });
   }
 
-  // ---- pencarian daerah (Nominatim OSM, gratis, khusus Indonesia) — UI di dalam toolbar ----
+  // ---- pencarian daerah (Nominatim OSM, gratis, khusus Indonesia) — UI di bar atas ----
   function initSearch(map) {
-    var wrap = document.getElementById('tool-search');
-    var toggle = document.getElementById('sk-search-toggle');
+    var wrap = document.getElementById('search-wrap');
+    var toggle = document.getElementById('sk-search-toggle'); // tidak ada lagi di layout baru (opsional)
     var input = document.getElementById('sk-search');
     var resBox = document.getElementById('sk-search-res');
     if (!wrap || !input) return;
@@ -232,8 +232,8 @@
     input.addEventListener('focus', function () {
       if (resBox.innerHTML) resBox.style.display = 'block';
     });
-    // di layar kecil: ikon kaca pembesar membuka/menutup kolom cari
-    toggle.addEventListener('click', function () {
+    // di layar kecil: ikon kaca pembesar membuka/menutup kolom cari (kalau ada)
+    if (toggle) toggle.addEventListener('click', function () {
       if (window.matchMedia('(max-width: 760px)').matches) {
         wrap.classList.toggle('open');
         if (wrap.classList.contains('open')) input.focus();

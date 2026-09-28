@@ -40,7 +40,8 @@
     map.on(L.Draw.Event.DELETED, function () { if (active) clearAll(); });
     map.on(L.Draw.Event.EDITED, onEdited);
     drawer = new L.Draw.Polygon(map, { shapeOptions: { color: '#16a34a', weight: 3 }, allowIntersection: false, showArea: true });
-    document.getElementById('ms-finish').onclick = function () {
+    var finBtn = document.getElementById('ms-finish'); // hanya ada di layout lama
+    if (finBtn) finBtn.onclick = function () {
       if (drawer && drawer.enabled()) drawer.completeShape();
     };
   }
@@ -141,7 +142,7 @@
   function calcCutFill() {
     if (!demStats) return;
     var target = parseFloat(String(document.getElementById('ms-target').value).replace(',', '.'));
-    if (isNaN(target)) { alert('Isi elevasi rencana yang bener.'); return; }
+    if (isNaN(target)) { if (window.GMap) GMap.toast('Isi elevasi rencana yang bener.'); return; }
     var cut = 0, fill = 0;
     demStats.elevs.forEach(function (e) {
       if (e > target) cut += (e - target) * demStats.cellM2;
@@ -167,5 +168,12 @@
     }]), 'application/vnd.google-earth.kml+xml');
   }
 
-  window.ToolMeasure = { init: init, activate: activate, deactivate: deactivate };
+  // dipakai modul Ukur gabungan: tampilkan polygon dari titik-titik ketukan
+  function showPolygon(ll) { // ll = [[lon,lat],...]
+    drawn.clearLayers();
+    drawn.addLayer(L.polygon(ll.map(function (p) { return [p[1], p[0]]; }), { color: '#16a34a', weight: 3 }));
+    setPolygon(ll);
+  }
+
+  window.ToolMeasure = { init: init, activate: activate, deactivate: deactivate, showPolygon: showPolygon, clear: clearAll };
 })();
