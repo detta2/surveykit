@@ -1,51 +1,80 @@
-/* contour.js — Tool Kontur: TANDAI DAERAHMU SENDIRI (klik -> pin, kotak ikut pin & bisa diubah) */
+/* contour.js — Tool Kontur: gambar batas lahannya sendiri (ketuk titik-titik), kontur dibuat di dalamnya */
 (function () {
   'use strict';
   var G = window.Geo, K = window.Kml;
   var inited = false, active = false, map = null, drawn = null;
   var contourGroup = null, contourLayer = null, contourRegId = null;
-  var lastGrid = null, lastBbox = null;
-  var pin = null, box = null, sizeK = 1, genSeq = 0, regenTimer = null;
+  var lastGrid = null, lastRing = null;
+  var pts = [], preview = null, dots = [], finished = false, generating = false, genSeq = 0;
 
-  // lebar kotak (derajat) mengikuti zoom x faktor ukuran pilihan user
-  function boxD() {
-    var d = 360 / Math.pow(2, map.getZoom()) * 1.5 * sizeK;
-    return Math.max(0.02, Math.min(2, d));
+  function el(id) { return document.getElementById(id); }
+  function toast(m) { if (window.GMap) GMap.toast(m); }
+  function ring() { return pts.map(function (p) { return [p.lng, p.lat]; }); }
+
+  function bboxOf(r) {
+    var w = Infinity, e = -Infinity, s = Infinity, n = -Infinity, i;
+    for (i = 0; i < r.length; i++) {
+      if (r[i][0] < w) w = r[i][0];
+      if (r[i][0] > e) e = r[i][0];
+      if (r[i][1] < s) s = r[i][1];
+      if (r[i][1] > n) n = r[i][1];
+    }
+    var padX = Math.max((e - w) * 0.05, 0.002), padY = Math.max((n - s) * 0.05, 0.002);
+    return { west: w - padX, east: e + padX, south: s - padY, north: n + padY };
   }
-  function currentBbox() {
-    var d = boxD(), ll = pin.getLatLng();
-    return { west: ll.lng - d / 2, east: ll.lng + d / 2, south: ll.lat - d / 2, north: ll.lat + d / 2 };
+
+  function updateButtons() {
+    el('ct-finish').disabled = !(pts.length >= 3 && !generating && !finished);
+    if (generating || finished) return;
+    var h = el('ct-info');
+    if (!pts.length) h.innerHTML = '<p class="hint">👆 Ketuk titik-titik ngikutin batas lahan — minimal 3 titik, makin rapat makin pas.</p>';
+    else h.innerHTML = '<p class="hint">📍 ' + pts.length + ' titik — ketuk lagi buat nambah' +
+      (pts.length >= 3 ? ', atau pencet <b>✓ Selesai</b>.' : ' (minimal 3).') + '</p>';
   }
-  function drawBox() {
-    var b = currentBbox();
-    if (box) drawn.removeLayer(box);
-    box = L.rectangle(
-      [[b.south, b.west], [b.north, b.east]],
-      { color: '#2563eb', weight: 2, dashArray: '6 4', fillOpacity: 0.03 }
-    );
-    drawn.addLayer(box);
+
+  function drawPreview() {
+    if (preview) { drawn.removeLayer(preview); preview = null; }
+    dots.forEach(function (d) { drawn.removeLayer(d); });
+    dots = [];
+    if (!pts.length) { updateButtons(); return; }
+    var latlngs = pts.map(function (p) { return [p.lat, p.lng]; });
+    preview = pts.length >= 3
+      ? L.polygon(latlngs, { color: '#22c55e', weight: 3, fillColor: '#22c55e', fillOpacity: 0.06 })
+      : L.polyline(latlngs, { color: '#22c55e', weight: 3 });
+    drawn.addLayer(preview);
+    pts.forEach(function (p) {
+      dots.push(L.circleMarker([p.lat, p.lng], { radius: 4, color: '#22c55e', fillColor: '#22c55e', fillOpacity: 1 }).addTo(drawn));
+    });
+    updateButtons();
   }
-  // user menandai daerahnya: pin jatuh di titik klik, kontur dibuat untuk daerah itu
-  function markAt(latlng) {
-    drawn.clearLayers();
-    pin = L.marker(latlng, { draggable: true, bubblingMouseEvents: false, title: 'Geser pin untuk memindah tanda' });
-    pin.on('drag', drawBox);
-    pin.on('dragend', scheduleRegen);
-    drawn.addLayer(pin);
-    drawBox();
-    generate(currentBbox());
-  }
-  function scheduleRegen() {
-    clearTimeout(regenTimer);
-    regenTimer = setTimeout(function () {
-      if (!active || !pin) return;
-      drawBox();
-      generate(currentBbox());
-    }, 700);
-  }
+
   function onMapClick(e) {
-    if (!active) return;
-    markAt(e.latlng); // klik = pindah tanda ke titik itu
+    if (!active || generating) return;
+    if (finished) reset(); // ketuk lagi = mulai gambar batas baru
+    pts.push({ lat: e.latlng.lat, lng: e.latlng.lng });
+    drawPreview();
+  }
+
+  function reset() {
+    genSeq++;
+    generating = false; finished = false;
+    pts = [];
+    if (preview) { drawn.removeLayer(preview); preview = null; }
+    dots.forEach(function (d) { drawn.removeLayer(d); });
+    dots = [];
+    lastGrid = null; lastRing = null;
+    if (contourGroup) contourGroup.clearLayers();
+    contourLayer = null;
+    el('ct-dl').style.display = 'none';
+    updateButtons();
+  }
+
+  function finish() {
+    if (generating || finished) return;
+    if (pts.length < 3) { toast('Tandai minimal 3 titik dulu.'); return; }
+    finished = true;
+    updateButtons();
+    generate(bboxOf(ring()), ring());
   }
 
   function init(sharedMap) {
@@ -54,37 +83,32 @@
     drawn = new L.FeatureGroup();
     map.addLayer(drawn);
     contourGroup = L.layerGroup().addTo(map); // hasil kontur: didaftarkan ke Layer Manager
-    document.getElementById('ct-interval').addEventListener('change', function () {
-      if (lastGrid) renderContours(lastGrid, effectiveInterval(lastGrid));
+    el('ct-interval').addEventListener('change', function () {
+      if (lastGrid) renderContours(lastGrid, effectiveInterval(lastGrid), lastRing);
     });
-    document.getElementById('ct-bigger').onclick = function () {
-      if (!active || !pin) return;
-      sizeK = Math.min(4, sizeK * 1.5);
-      drawBox(); scheduleRegen();
+    el('ct-finish').onclick = finish;
+    el('ct-undo').onclick = function () {
+      if (generating || finished) return;
+      pts.pop();
+      drawPreview();
     };
-    document.getElementById('ct-smaller').onclick = function () {
-      if (!active || !pin) return;
-      sizeK = Math.max(0.25, sizeK / 1.5);
-      drawBox(); scheduleRegen();
-    };
-    document.getElementById('ct-geojson').onclick = downloadGeoJSON;
-    document.getElementById('ct-kml').onclick = downloadKML;
-    document.getElementById('ct-clear').onclick = function () { drawn.clearLayers(); clearContours(); };
+    el('ct-clear').onclick = reset;
+    el('ct-geojson').onclick = downloadGeoJSON;
+    el('ct-kml').onclick = downloadKML;
   }
 
   function activate() {
     active = true;
     map.on('click', onMapClick);
-    document.getElementById('map').style.cursor = 'crosshair';
-    if (!pin) {
-      document.getElementById('ct-info').innerHTML = '<p class="hint">👆 Klik peta untuk menandai daerahmu.</p>';
-    }
+    el('map').style.cursor = 'crosshair';
+    updateButtons();
   }
   function deactivate() {
     active = false;
-    clearTimeout(regenTimer);
+    genSeq++; // batalkan generate yang masih jalan
+    generating = false;
     map.off('click', onMapClick);
-    document.getElementById('map').style.cursor = '';
+    el('map').style.cursor = '';
   }
 
   // interval otomatis: target ~12 garis, dibulatkan ke 1/2/5 x 10^n
@@ -102,57 +126,78 @@
     return { mn: mn, mx: mx };
   }
   function effectiveInterval(grid) {
-    if (document.getElementById('ct-interval').value === 'auto') {
+    if (el('ct-interval').value === 'auto') {
       var r = gridRange(grid);
       return niceInterval(r.mx - r.mn);
     }
-    return parseFloat(document.getElementById('ct-interval').value);
+    return parseFloat(el('ct-interval').value);
   }
 
-  function clearContours() {
-    lastGrid = null; lastBbox = null;
-    pin = null; box = null; sizeK = 1;
-    if (contourGroup) contourGroup.clearLayers();
-    contourLayer = null;
-    document.getElementById('ct-info').innerHTML = '<p class="hint">👆 Klik peta untuk menandai daerahmu.</p>';
-    document.getElementById('ct-dl').style.display = 'none';
+  // sel di luar batas lahan di-mask jadi NaN: garis kontur berhenti pas di batas
+  function maskGrid(grid, r) {
+    var w = grid.w, h = grid.h;
+    var resX = (grid.east - grid.west) / w, resY = (grid.north - grid.south) / h;
+    var out = new Float64Array(w * h);
+    for (var y = 0; y < h; y++) {
+      var lat = grid.north - (y + 0.5) * resY;
+      for (var x = 0; x < w; x++) {
+        var lon = grid.west + (x + 0.5) * resX;
+        out[y * w + x] = G.pointInPolygon([lon, lat], r) ? grid.data[y * w + x] : NaN;
+      }
+    }
+    return { w: w, h: h, data: out, north: grid.north, south: grid.south, east: grid.east, west: grid.west };
   }
 
-  function generate(bbox) {
-    var info = document.getElementById('ct-info');
+  function generate(bbox, r) {
+    var info = el('ct-info');
+    generating = true; updateButtons();
     info.innerHTML = '<p class="hint">⏳ Ambil data DEM & bikin kontur…</p>';
     var seq = ++genSeq;
     var z = G.chooseZoomForBbox(bbox, 480);
     G.fetchElevationGrid(bbox, z).then(function (grid) {
-      if (seq !== genSeq || !active) return; // abaikan hasil basi
-      lastGrid = grid; lastBbox = bbox;
-      renderContours(grid, effectiveInterval(grid));
+      if (seq !== genSeq || !active) return;
+      var masked = maskGrid(grid, r);
+      lastGrid = masked; lastRing = r;
+      generating = false;
+      renderContours(masked, effectiveInterval(masked), r);
     }).catch(function (err) {
       if (seq !== genSeq || !active) return;
+      generating = false; finished = false;
       info.innerHTML = '<p class="hint err-text">Gagal: ' + K.esc(err.message) + '</p>';
+      updateButtons();
     });
   }
 
-  // statistik tambahan dari grid DEM: elevasi, beda tinggi, kemiringan, luas, klasifikasi medan
+  // statistik dari grid DEM: elevasi, beda tinggi, kemiringan, klasifikasi medan (NaN dilewati)
   function gridStats(grid) {
-    var d = grid.data, n = d.length, sum = 0, mn = Infinity, mx = -Infinity, i, v;
-    for (i = 0; i < n; i++) { v = d[i]; sum += v; if (v < mn) mn = v; if (v > mx) mx = v; }
+    var d = grid.data, n = d.length, sum = 0, mn = Infinity, mx = -Infinity, cnt = 0, i, v;
+    for (i = 0; i < n; i++) {
+      v = d[i];
+      if (v !== v) continue; // NaN
+      sum += v; cnt++;
+      if (v < mn) mn = v;
+      if (v > mx) mx = v;
+    }
     var w = grid.w, h = grid.h;
     var latC = (grid.north + grid.south) / 2 * Math.PI / 180;
     var mxM = (grid.east - grid.west) / w * 111320 * Math.cos(latC); // meter per pixel (x)
     var myM = (grid.north - grid.south) / h * 110540;               // meter per pixel (y)
-    var sSum = 0, sCnt = 0, sMax = 0, x, y, dzdx, dzdy, s;
+    var sSum = 0, sCnt = 0, sMax = 0, x, y, dzdx, dzdy, s, a, b;
     for (y = 1; y < h - 1; y++) {
       for (x = 1; x < w - 1; x++) {
-        dzdx = (d[y * w + x + 1] - d[y * w + x - 1]) / (2 * mxM);
-        dzdy = (d[(y + 1) * w + x] - d[(y - 1) * w + x]) / (2 * myM);
+        a = d[y * w + x + 1]; b = d[y * w + x - 1];
+        if (a !== a || b !== b) continue;
+        dzdx = (a - b) / (2 * mxM);
+        a = d[(y + 1) * w + x]; b = d[(y - 1) * w + x];
+        if (a !== a || b !== b) continue;
+        dzdy = (a - b) / (2 * myM);
         s = Math.sqrt(dzdx * dzdx + dzdy * dzdy) * 100; // persen
         sSum += s; sCnt++; if (s > sMax) sMax = s;
       }
     }
     var relief = mx - mn;
     var medan = relief < 25 ? 'Datar' : relief < 100 ? 'Bergelombang' : relief < 300 ? 'Berbukit' : 'Bergunung';
-    return { mn: mn, mx: mx, mean: sum / n, relief: relief, slopeMean: sCnt ? sSum / sCnt : 0, slopeMax: sMax, medan: medan };
+    return { mn: mn, mx: mx, mean: cnt ? sum / cnt : 0, relief: relief, slopeMean: sCnt ? sSum / sCnt : 0, slopeMax: sMax, medan: medan };
   }
 
   // titik label: tengah ring terpanjang dari poligon terbesar (biar label nempel di garis)
@@ -169,7 +214,7 @@
     return [p[1], p[0]];
   }
 
-  function renderContours(grid, interval) {
+  function renderContours(grid, interval, r) {
     var d = grid.data, mn = Infinity, mx = -Infinity, i;
     for (i = 0; i < d.length; i++) { if (d[i] < mn) mn = d[i]; if (d[i] > mx) mx = d[i]; }
     var lo = Math.floor(mn / interval) * interval;
@@ -177,7 +222,7 @@
     for (var t = lo; t <= mx; t += interval) thresholds.push(Math.round(t * 100) / 100);
     if (thresholds.length < 2) thresholds.push(lo + interval);
     if (thresholds.length > 400) {
-      document.getElementById('ct-info').innerHTML = '<p class="hint err-text">Terlalu banyak garis kontur. Pilih interval lebih besar atau area lebih kecil.</p>';
+      el('ct-info').innerHTML = '<p class="hint err-text">Terlalu banyak garis kontur. Pilih interval lebih besar atau area lebih kecil.</p>';
       return;
     }
     var multis = d3.contours().size([grid.w, grid.h]).thresholds(thresholds)(Array.from(d));
@@ -235,17 +280,18 @@
 
     var nLines = features.length;
     var st = gridStats(grid);
-    // luas area kotak (ha / km2)
-    var latC = (grid.north + grid.south) / 2 * Math.PI / 180;
-    var areaM2 = (grid.east - grid.west) * 111320 * Math.cos(latC) * (grid.north - grid.south) * 110540;
-    var areaTxt = areaM2 >= 1000000 ? G.fmtNum(areaM2 / 1000000, 2) + ' km²' : G.fmtNum(areaM2 / 10000, 1) + ' ha';
-    document.getElementById('ct-info').innerHTML =
+    var perim = 0;
+    for (i = 0; i < r.length; i++) {
+      var a = r[i], b = r[(i + 1) % r.length];
+      perim += G.haversine(a[1], a[0], b[1], b[0]);
+    }
+    el('ct-info').innerHTML =
       '<p class="ok-text">✔ ' + nLines + ' garis kontur (interval ' + interval + ' m). ' +
       'Klik garis untuk lihat nilainya.</p>' +
-      '<p class="hint">Garis tebal = kontur indeks (kelipatan ' + (interval * 5) + ' m).</p>' +
+      '<p class="hint">Garis tebal = kontur indeks (kelipatan ' + (interval * 5) + ' m). Ketuk peta buat gambar batas baru.</p>' +
       '<div class="res-grid">' +
-      '<div class="res"><span>📏 Luas area</span><b>' + areaTxt + '</b></div>' +
-      '<div class="res"><span>📍 Elevasi titik tanda</span><b>' + (pin ? G.fmtNum(G.sampleGrid(grid, pin.getLatLng().lng, pin.getLatLng().lat), 1) + ' m' : '–') + '</b></div>' +
+      '<div class="res"><span>📏 Luas lahan</span><b>' + G.fmtArea(G.ringArea(r)) + '</b></div>' +
+      '<div class="res"><span>⭕ Keliling batas</span><b>' + G.fmtDist(perim) + '</b></div>' +
       '<div class="res"><span>⛰️ Elevasi terendah</span><b>' + G.fmtNum(st.mn, 0) + ' m</b></div>' +
       '<div class="res"><span>⛰️ Elevasi tertinggi</span><b>' + G.fmtNum(st.mx, 0) + ' m</b></div>' +
       '<div class="res"><span>📊 Elevasi rata-rata</span><b>' + G.fmtNum(st.mean, 0) + ' m</b></div>' +
@@ -253,7 +299,8 @@
       '<div class="res"><span>〰️ Kemiringan rata-rata</span><b>' + G.fmtNum(st.slopeMean, 1) + ' %</b></div>' +
       '<div class="res"><span>🏔️ Perkiraan medan</span><b>' + st.medan + '</b></div>' +
       '</div>';
-    document.getElementById('ct-dl').style.display = '';
+    el('ct-dl').style.display = '';
+    updateButtons();
     contourLayer._fc = fc;
   }
 

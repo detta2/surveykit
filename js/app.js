@@ -18,7 +18,7 @@
   var HINTS = {
     coord: '📍 Ketuk titik mana saja di peta buat liat koordinatnya.',
     ukur: 'Ketuk titik-titik di peta — 2 titik jadi <b>jarak</b>, 3+ titik jadi <b>luas</b>.',
-    kontur: '👆 Ketuk peta buat menandai daerah — garis kontur langsung jadi.'
+    kontur: '👆 Ketuk titik-titik ngikutin batas lahanmu.'
   };
   // modul yg perlu init sekali per alat (activate hanya untuk yg interaksi peta)
   var MODULES = {

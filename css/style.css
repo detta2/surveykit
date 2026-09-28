@@ -179,6 +179,8 @@ textarea { resize: vertical; font-family: var(--mono); font-size: 12.5px; }
 }
 .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(52, 211, 153, 0.4); }
 .btn:active { transform: translateY(0); }
+.btn:disabled { opacity: 0.45; cursor: default; }
+.btn:disabled:hover { transform: none; box-shadow: 0 4px 16px rgba(52, 211, 153, 0.25); }
 .btn.secondary { background: rgba(255, 255, 255, 0.06); color: var(--ink); border: 1px solid var(--stroke-2); box-shadow: none; }
 .btn.secondary:hover { background: rgba(255, 255, 255, 0.11); box-shadow: none; border-color: var(--acc); }
 .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
