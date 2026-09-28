@@ -56,9 +56,8 @@ body {
 .toolbar {
   position: fixed; top: 14px; left: 50%; transform: translateX(-50%); z-index: 1000;
   display: flex; gap: 4px; padding: 6px; border-radius: 999px;
-  max-width: calc(100vw - 200px); overflow-x: auto; scrollbar-width: none;
+  max-width: calc(100vw - 200px);
 }
-.toolbar::-webkit-scrollbar { display: none; }
 .tool-btn {
   border: none; background: transparent; color: var(--mut);
   border-radius: 999px; padding: 9px 15px; font: inherit; font-size: 13px; font-weight: 650;
@@ -71,6 +70,15 @@ body {
   background: linear-gradient(135deg, var(--acc), var(--acc-d));
   color: var(--acc-ink);
   box-shadow: 0 4px 18px rgba(52, 211, 153, 0.45);
+}
+
+/* layar sedang: label tool disembunyikan agar toolbar muat tanpa scroll (dropdown tidak ter-clip) */
+@media (max-width: 1024px) {
+  .tool-btn .lbl { display: none; }
+  .tool-btn { padding: 8px 12px; }
+  .tool-btn .ico svg { width: 19px; height: 19px; }
+  #sk-search { width: 120px; }
+  #sk-search:focus { width: 150px; }
 }
 
 /* ---------- peta ---------- */
@@ -264,13 +272,13 @@ textarea { resize: vertical; font-family: var(--mono); font-size: 12.5px; }
   .tool-btn { padding: 8px 12px; font-size: 12px; }
   .tool-btn .lbl { display: none; }
   .tool-btn .ico svg { width: 20px; height: 20px; }
-  /* cari daerah di mobile: ikon kaca pembesar, input mengambang di atas */
+  /* cari daerah di mobile: ikon kaca pembesar, input + hasil mengambang di atas toolbar */
   .tool-search { margin-left: 2px; padding-left: 8px; }
   .s-toggle { pointer-events: auto; padding: 8px; }
   .tool-search #sk-search { display: none; }
-  .tool-search.open #sk-search { display: block; position: fixed; top: 64px; left: 14px; right: 14px; width: auto; padding: 12px 16px; font-size: 14px; border-radius: 14px; background: rgba(13,20,34,.97); border: 1px solid var(--stroke); box-shadow: 0 12px 32px rgba(0,0,0,.45); z-index: 1001; }
-  .tool-search.open #sk-search:focus { width: auto; }
-  .tool-search.open .s-res { position: fixed; top: 118px; left: 14px; right: 14px; min-width: 0; }
+  .tool-search.open #sk-search { display: block; position: absolute; bottom: calc(100% + 10px); right: 0; width: min(72vw, 280px); padding: 12px 16px; font-size: 14px; border-radius: 14px; background: rgba(13,20,34,.97); border: 1px solid var(--stroke); box-shadow: 0 12px 32px rgba(0,0,0,.45); }
+  .tool-search.open #sk-search:focus { width: min(72vw, 280px); }
+  .tool-search.open .s-res { position: absolute; top: auto; bottom: calc(100% + 62px); right: 0; min-width: min(72vw, 280px); }
   #panel {
     top: auto; left: 10px; right: 10px; bottom: 76px; width: auto; max-width: none;
     max-height: 58vh; transform: translateY(calc(100% + 90px));
