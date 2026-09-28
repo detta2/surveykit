@@ -63,23 +63,13 @@
     });
   }
 
-  // ---- pencarian daerah kecil/besar (Nominatim OSM, gratis, khusus Indonesia) ----
+  // ---- pencarian daerah (Nominatim OSM, gratis, khusus Indonesia) — UI di dalam toolbar ----
   function initSearch(map) {
-    var Search = L.Control.extend({
-      options: { position: 'topleft' },
-      onAdd: function () {
-        var el = L.DomUtil.create('div', 'search-ctl glass');
-        el.innerHTML = '<span class="s-ico">🔍</span>' +
-          '<input id="sk-search" type="search" placeholder="Cari daerah… cth: Lahat" autocomplete="off" aria-label="Cari daerah">' +
-          '<div id="sk-search-res" class="s-res"></div>';
-        L.DomEvent.disableClickPropagation(el);
-        L.DomEvent.disableScrollPropagation(el);
-        return el;
-      }
-    });
-    map.addControl(new Search());
+    var wrap = document.getElementById('tool-search');
+    var toggle = document.getElementById('sk-search-toggle');
     var input = document.getElementById('sk-search');
     var resBox = document.getElementById('sk-search-res');
+    if (!wrap || !input) return;
     var markLayer = L.layerGroup().addTo(map);
     var timer = null;
 
@@ -111,6 +101,7 @@
               var z = p.addresstype === 'county' || p.addresstype === 'state' ? 10 : 13;
               map.flyTo([lat, lon], Math.max(map.getZoom(), z), { duration: 1.2 });
               resBox.style.display = 'none';
+              wrap.classList.remove('open');
               input.blur();
             };
           });
@@ -125,12 +116,25 @@
       timer = setTimeout(function () { doSearch(input.value.trim()); }, 450);
     });
     input.addEventListener('keydown', function (e) {
-      e.stopPropagation(); // jangan sampai panah keyboard menggeser peta
       if (e.key === 'Enter') { clearTimeout(timer); doSearch(input.value.trim()); }
-      if (e.key === 'Escape') { resBox.style.display = 'none'; input.blur(); }
+      if (e.key === 'Escape') { resBox.style.display = 'none'; wrap.classList.remove('open'); input.blur(); }
     });
     input.addEventListener('focus', function () {
       if (resBox.innerHTML) resBox.style.display = 'block';
+    });
+    // di layar kecil: ikon kaca pembesar membuka/menutup kolom cari
+    toggle.addEventListener('click', function () {
+      if (window.matchMedia('(max-width: 760px)').matches) {
+        wrap.classList.toggle('open');
+        if (wrap.classList.contains('open')) input.focus();
+        else { resBox.style.display = 'none'; input.blur(); }
+      } else {
+        input.focus();
+      }
+    });
+    // klik di luar menutup hasil (mode mobile)
+    document.addEventListener('click', function (e) {
+      if (!wrap.contains(e.target)) { resBox.style.display = 'none'; wrap.classList.remove('open'); }
     });
   }
 
