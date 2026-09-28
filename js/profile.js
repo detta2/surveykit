@@ -1,45 +1,43 @@
-/* profile.js — Tool 2: Profil Ketinggian (cross-section dari DEM) */
+/* profile.js — Tool Profil Ketinggian: gambar garis DI PETA BERSAMA */
 (function () {
   'use strict';
   var G = window.Geo, K = window.Kml;
-  var inited = false, map = null, drawn = null, hoverMarker = null;
+  var inited = false, active = false, map = null, drawCtl = null, drawn = null, hoverMarker = null;
   var samples = []; // {d (meter), lat, lon, e (meter)}
 
-  function baseLayers() {
-    return {
-      'Satelit': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Citra: Esri World Imagery', maxZoom: 19
-      }),
-      'Peta': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap', maxZoom: 19
-      }),
-      'Topo': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Esri World Topo', maxZoom: 19
-      })
-    };
+  function onCreated(e) {
+    if (!active) return;
+    drawn.clearLayers();
+    drawn.addLayer(e.layer);
+    analyze(e.layer.getLatLngs());
   }
 
-  function initMap() {
-    var layers = baseLayers();
-    map = L.map('map-profile', { layers: [layers['Satelit']] }).setView([-2.9, 104.7], 5);
-    L.control.layers(layers).addTo(map);
-    var drawCtl = new L.Control.Draw({
+  function init(sharedMap) {
+    if (inited) return; inited = true;
+    map = sharedMap;
+    drawn = new L.FeatureGroup();
+    map.addLayer(drawn);
+    drawCtl = new L.Control.Draw({
       draw: {
         polyline: { shapeOptions: { color: '#e11d48', weight: 4 } },
         polygon: false, rectangle: false, circle: false, marker: false, circlemarker: false
       },
-      edit: { featureGroup: new L.FeatureGroup() }
+      edit: { featureGroup: drawn }
     });
+    map.on(L.Draw.Event.CREATED, onCreated);
+    map.on(L.Draw.Event.DELETED, function () { if (active) clearAll(); });
+    document.getElementById('pf-csv').onclick = downloadCSV;
+    document.getElementById('pf-kml').onclick = downloadKML;
+    window.addEventListener('resize', function () { if (samples.length) drawChart(); });
+  }
+
+  function activate() {
+    active = true;
     map.addControl(drawCtl);
-    drawn = drawCtl.options.edit.featureGroup;
-    map.addLayer(drawn);
-    map.on(L.Draw.Event.CREATED, function (e) {
-      drawn.clearLayers();
-      drawn.addLayer(e.layer);
-      analyze(e.layer.getLatLngs());
-    });
-    map.on(L.Draw.Event.DELETED, function () { clearAll(); });
-    setTimeout(function () { map.invalidateSize(); }, 100);
+  }
+  function deactivate() {
+    active = false;
+    map.removeControl(drawCtl);
   }
 
   function clearAll() {
@@ -116,11 +114,11 @@
   function drawChart() {
     var wrap = document.getElementById('pf-chart-wrap');
     var cv = document.getElementById('pf-chart');
-    var W = wrap.clientWidth || 800, H = 260, dpr = window.devicePixelRatio || 1;
+    var W = wrap.clientWidth || 360, H = 240, dpr = window.devicePixelRatio || 1;
     cv.width = W * dpr; cv.height = H * dpr;
     cv.style.width = W + 'px'; cv.style.height = H + 'px';
     var ctx = cv.getContext('2d'); ctx.scale(dpr, dpr);
-    var padL = 52, padR = 14, padT = 14, padB = 30;
+    var padL = 48, padR = 12, padT = 12, padB = 28;
     var iw = W - padL - padR, ih = H - padT - padB;
     var es = samples.map(function (s) { return s.e; });
     var ds = samples.map(function (s) { return s.d; });
@@ -131,7 +129,6 @@
     function Y(e) { return padT + (1 - (e - mn) / (mx - mn)) * ih; }
 
     ctx.clearRect(0, 0, W, H);
-    // grid horizontal
     ctx.strokeStyle = '#e5e7eb'; ctx.fillStyle = '#6b7280'; ctx.font = '11px system-ui';
     ctx.lineWidth = 1; ctx.textAlign = 'right';
     for (var gi = 0; gi <= 4; gi++) {
@@ -139,13 +136,11 @@
       ctx.beginPath(); ctx.moveTo(padL, yy); ctx.lineTo(W - padR, yy); ctx.stroke();
       ctx.fillText(G.fmtNum(ev, 0) + ' m', padL - 6, yy + 4);
     }
-    // label jarak
     ctx.textAlign = 'center';
     for (var di = 0; di <= 4; di++) {
       var dv = dMax * di / 4;
       ctx.fillText(G.fmtDist(dv), X(dv), H - 10);
     }
-    // area + garis profil
     var grad = ctx.createLinearGradient(0, padT, 0, padT + ih);
     grad.addColorStop(0, 'rgba(22,163,74,.45)'); grad.addColorStop(1, 'rgba(22,163,74,.05)');
     ctx.beginPath(); ctx.moveTo(X(ds[0]), Y(es[0]));
@@ -154,7 +149,6 @@
     ctx.lineTo(X(dMax), padT + ih); ctx.lineTo(X(0), padT + ih); ctx.closePath();
     ctx.fillStyle = grad; ctx.fill();
 
-    // hover
     var tip = document.getElementById('pf-tip');
     cv.onmousemove = function (ev) {
       var r = cv.getBoundingClientRect(), mxp = ev.clientX - r.left;
@@ -197,14 +191,5 @@
     }]), 'application/vnd.google-earth.kml+xml');
   }
 
-  function init() {
-    if (inited) return; inited = true;
-    initMap();
-    document.getElementById('pf-csv').onclick = downloadCSV;
-    document.getElementById('pf-kml').onclick = downloadKML;
-    window.addEventListener('resize', function () { if (samples.length) drawChart(); });
-  }
-
-  function refresh() { if (map) setTimeout(function(){ map.invalidateSize(); }, 60); }
-  window.ToolProfile = { init: init, refresh: refresh };
+  window.ToolProfile = { init: init, activate: activate, deactivate: deactivate };
 })();

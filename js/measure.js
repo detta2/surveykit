@@ -1,54 +1,51 @@
-/* measure.js — Tool 4: Ukur Luas Lahan + Estimasi Cut & Fill */
+/* measure.js — Tool Ukur Lahan: gambar polygon DI PETA BERSAMA + Cut & Fill */
 (function () {
   'use strict';
   var G = window.Geo, K = window.Kml;
-  var inited = false, map = null, drawn = null;
+  var inited = false, active = false, map = null, drawCtl = null, drawn = null;
   var polyLL = null;   // [[lon,lat],...]
-  var demStats = null; // {min,max,avg,count}
+  var demStats = null; // {min,max,avg,elevs,cellM2}
 
-  function baseLayers() {
-    return {
-      'Satelit': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Citra: Esri World Imagery', maxZoom: 19
-      }),
-      'Peta': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap', maxZoom: 19
-      }),
-      'Topo': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Esri World Topo', maxZoom: 19
-      })
-    };
+  function onCreated(e) {
+    if (!active) return;
+    drawn.clearLayers();
+    drawn.addLayer(e.layer);
+    var ll = e.layer.getLatLngs()[0].map(function (p) { return [p.lng, p.lat]; });
+    setPolygon(ll);
+  }
+  function onEdited() {
+    if (!active) return;
+    var layers = drawn.getLayers();
+    if (layers.length) {
+      var ll = layers[0].getLatLngs()[0].map(function (p) { return [p.lng, p.lat]; });
+      setPolygon(ll);
+    }
   }
 
-  function initMap() {
-    var layers = baseLayers();
-    map = L.map('map-measure', { layers: [layers['Satelit']] }).setView([-2.9, 104.7], 5);
-    L.control.layers(layers).addTo(map);
-    var drawCtl = new L.Control.Draw({
+  function init(sharedMap) {
+    if (inited) return; inited = true;
+    map = sharedMap;
+    drawn = new L.FeatureGroup();
+    map.addLayer(drawn);
+    drawCtl = new L.Control.Draw({
       draw: {
         polygon: { shapeOptions: { color: '#16a34a', weight: 3 }, allowIntersection: false, showArea: true },
         polyline: false, rectangle: false, circle: false, marker: false, circlemarker: false
       },
-      edit: { featureGroup: new L.FeatureGroup() }
+      edit: { featureGroup: drawn }
     });
+    map.on(L.Draw.Event.CREATED, onCreated);
+    map.on(L.Draw.Event.DELETED, function () { if (active) clearAll(); });
+    map.on(L.Draw.Event.EDITED, onEdited);
+  }
+
+  function activate() {
+    active = true;
     map.addControl(drawCtl);
-    drawn = drawCtl.options.edit.featureGroup;
-    map.addLayer(drawn);
-    map.on(L.Draw.Event.CREATED, function (e) {
-      drawn.clearLayers();
-      drawn.addLayer(e.layer);
-      var ll = e.layer.getLatLngs()[0].map(function (p) { return [p.lng, p.lat]; });
-      setPolygon(ll);
-    });
-    map.on(L.Draw.Event.DELETED, clearAll);
-    map.on(L.Draw.Event.EDITED, function () {
-      var layers = drawn.getLayers();
-      if (layers.length) {
-        var ll = layers[0].getLatLngs()[0].map(function (p) { return [p.lng, p.lat]; });
-        setPolygon(ll);
-      }
-    });
-    setTimeout(function () { map.invalidateSize(); }, 100);
+  }
+  function deactivate() {
+    active = false;
+    map.removeControl(drawCtl);
   }
 
   function clearAll() {
@@ -72,10 +69,14 @@
       '<div class="res"><span>Luas (m²)</span><b>' + G.fmtNum(area, 1) + '</b></div>' +
       '<div class="res"><span>Keliling</span><b>' + G.fmtDist(per) + '</b></div>' +
       '</div>' +
-      '<button class="btn" id="ms-analyze">⛰️ Analisis Ketinggian (DEM)</button> ' +
-      '<button class="btn secondary" id="ms-kml2">⬇ Unduh KML</button>';
+      '<div class="btn-row">' +
+      '<button class="btn" id="ms-analyze">⛰️ Analisis Ketinggian (DEM)</button>' +
+      '<button class="btn secondary" id="ms-kml2">⬇ Unduh KML</button>' +
+      '<button class="btn secondary" id="ms-clear">🗑 Hapus</button>' +
+      '</div>';
     document.getElementById('ms-analyze').onclick = analyzeDEM;
     document.getElementById('ms-kml2').onclick = downloadKML;
+    document.getElementById('ms-clear').onclick = function () { drawn.clearLayers(); clearAll(); };
     document.getElementById('ms-dem').innerHTML = '';
     document.getElementById('ms-cutfill').style.display = 'none';
   }
@@ -88,7 +89,6 @@
       west: Math.min.apply(null, lons), east: Math.max.apply(null, lons),
       south: Math.min.apply(null, lats), north: Math.max.apply(null, lats)
     };
-    // batasi jumlah sel: turunkan zoom bila perlu
     var z = 14;
     var approxCells = (bbox.east - bbox.west) / 360 * Math.pow(2, z) * 256 * (bbox.north - bbox.south) / 360 * Math.pow(2, z) * 256;
     if (approxCells > 400000) z = 13;
@@ -99,8 +99,6 @@
       var mn = Infinity, mx = -Infinity, sum = 0, cnt = 0;
       var meanLat = (bbox.south + bbox.north) / 2;
       var cellM2 = G.cellAreaM2(meanLat, resX, resY);
-      var cutFill = null;
-      // kumpulkan statistik; volume dihitung saat tombol ditekan (butuh elevasi rencana)
       var elevs = [];
       var step = Math.max(1, Math.floor(Math.sqrt(grid.w * grid.h / 200000)));
       for (var r = 0; r < grid.h; r += step) {
@@ -161,11 +159,5 @@
     }]), 'application/vnd.google-earth.kml+xml');
   }
 
-  function init() {
-    if (inited) return; inited = true;
-    initMap();
-  }
-
-  function refresh() { if (map) setTimeout(function(){ map.invalidateSize(); }, 60); }
-  window.ToolMeasure = { init: init, refresh: refresh };
+  window.ToolMeasure = { init: init, activate: activate, deactivate: deactivate };
 })();

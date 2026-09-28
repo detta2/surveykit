@@ -1,33 +1,119 @@
-/* app.js — navigasi tab + inisialisasi malas tiap tool */
+/* app.js — SATU peta, toolbar alat, panel samping */
 (function () {
   'use strict';
-  var tools = {
-    home: function () { window.ToolHome.init(); window.ToolHome.refresh(); },
-    converter: function () { window.ToolConverter.init(); },
-    profile: function () { window.ToolProfile.init(); window.ToolProfile.refresh(); },
-    contour: function () { window.ToolContour.init(); window.ToolContour.refresh(); },
-    measure: function () { window.ToolMeasure.init(); window.ToolMeasure.refresh(); }
-  };
-  var loaded = {};
 
-  function switchTab(name) {
-    document.querySelectorAll('.tab-btn').forEach(function (b) {
-      b.classList.toggle('active', b.dataset.tab === name);
+  var map = null;
+  var current = 'explore';
+  var pickMode = false;
+  var inited = {};
+  var DRAW_TOOLS = { profile: 'ToolProfile', contour: 'ToolContour', measure: 'ToolMeasure' };
+
+  var TITLES = {
+    explore: '🛰️ Jelajah',
+    converter: '📍 Konverter Koordinat',
+    profile: '⛰️ Profil Ketinggian',
+    contour: '🗺️ Kontur Otomatis',
+    measure: '📐 Ukur Lahan & Cut-Fill'
+  };
+
+  function fmt(n, d) {
+    return Number(n).toLocaleString('id-ID', { maximumFractionDigits: d == null ? 5 : d });
+  }
+  function utmZone(lon) { return Math.floor((lon + 180) / 6) + 1; }
+
+  function ensureInit(name) {
+    if (inited[name]) return;
+    inited[name] = true;
+    if (name === 'converter') window.ToolConverter.init();
+    else if (DRAW_TOOLS[name]) window[DRAW_TOOLS[name]].init(map);
+  }
+
+  function deactivateDraw() {
+    Object.keys(DRAW_TOOLS).forEach(function (t) {
+      if (inited[t]) window[DRAW_TOOLS[t]].deactivate();
     });
-    document.querySelectorAll('.tool-panel').forEach(function (p) {
-      p.classList.toggle('active', p.id === 'panel-' + name);
+  }
+
+  function openPanel(name) {
+    document.querySelectorAll('.panel-sec').forEach(function (s) {
+      s.classList.toggle('active', s.dataset.panel === name);
     });
-    if (tools[name]) {
-      if (!loaded[name]) { loaded[name] = true; }
-      tools[name]();
+    document.getElementById('panel-title').textContent = TITLES[name] || 'Alat';
+    document.getElementById('panel').classList.add('open');
+  }
+  function closePanel() {
+    document.getElementById('panel').classList.remove('open');
+  }
+
+  function setTool(name) {
+    if (name === current) {
+      // klik alat yang sama: buka/tutup panel
+      document.getElementById('panel').classList.toggle('open');
+      return;
     }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    deactivateDraw();
+    pickMode = false;
+    current = name;
+    document.querySelectorAll('.tool-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.tool === name);
+    });
+    ensureInit(name);
+    if (DRAW_TOOLS[name]) window[DRAW_TOOLS[name]].activate();
+    if (name === 'explore') closePanel();
+    else openPanel(name);
+  }
+
+  // dipanggil tombol "📍 Ambil dari peta" di konverter
+  window.AppPickCoord = function () {
+    pickMode = true;
+    closePanel();
+    var rc = document.getElementById('coords');
+    rc.innerHTML = '👆 <b>Klik satu titik di peta</b> untuk mengisi koordinat…';
+  };
+
+  function explorePopup(latlng) {
+    var zone = utmZone(latlng.lng), south = latlng.lat < 0;
+    var def = '+proj=utm +zone=' + zone + (south ? ' +south' : '') + ' +datum=WGS84 +units=m +no_defs';
+    var p = proj4('WGS84', def, [latlng.lng, latlng.lat]);
+    L.popup().setLatLng(latlng).setContent(
+      '<b>LatLon:</b> ' + fmt(latlng.lat) + ', ' + fmt(latlng.lng) +
+      '<br><b>UTM:</b> ' + fmt(p[0], 1) + ' E, ' + fmt(p[1], 1) + ' N' +
+      '<br><span style="color:#6b7280;font-size:12px">Zona ' + zone + (south ? 'S' : 'N') + '</span>'
+    ).openOn(map);
   }
 
   document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.tab-btn').forEach(function (b) {
-      b.addEventListener('click', function () { switchTab(b.dataset.tab); });
+    map = window.GMap.init();
+    var readout = document.getElementById('coords');
+    var defaultHint = readout.innerHTML;
+
+    map.on('mousemove', function (e) {
+      if (!pickMode) {
+        readout.innerHTML = 'Lat <b>' + fmt(e.latlng.lat) + '</b> &nbsp; Lon <b>' + fmt(e.latlng.lng) + '</b>';
+      }
     });
-    switchTab('home');
+
+    map.on('click', function (e) {
+      if (pickMode) {
+        pickMode = false;
+        document.getElementById('cv-lat').value = e.latlng.lat.toFixed(6);
+        document.getElementById('cv-lon').value = e.latlng.lng.toFixed(6);
+        readout.innerHTML = defaultHint;
+        ensureInit('converter');
+        openPanel('converter');
+        document.getElementById('cv-go1').click();
+        return;
+      }
+      if (current !== 'explore') return; // alat gambar sedang aktif
+      explorePopup(e.latlng);
+    });
+
+    document.querySelectorAll('.tool-btn').forEach(function (b) {
+      b.addEventListener('click', function () { setTool(b.dataset.tool); });
+    });
+    document.getElementById('panel-close').addEventListener('click', closePanel);
+
+    // mulai dalam mode jelajah
+    document.querySelector('.panel-sec[data-panel="explore"]').classList.add('active');
   });
 })();

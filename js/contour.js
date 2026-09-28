@@ -1,46 +1,47 @@
-/* contour.js — Tool 3: Peta Kontur Otomatis dari DEM */
+/* contour.js — Tool Kontur Otomatis: gambar kotak DI PETA BERSAMA */
 (function () {
   'use strict';
   var G = window.Geo, K = window.Kml;
-  var inited = false, map = null, drawn = null, contourLayer = null;
+  var inited = false, active = false, map = null, drawCtl = null, drawn = null, contourLayer = null;
   var lastGrid = null, lastBbox = null;
 
-  function baseLayers() {
-    return {
-      'Topo': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Esri World Topo', maxZoom: 19
-      }),
-      'Satelit': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-        attribution: 'Citra: Esri World Imagery', maxZoom: 19
-      }),
-      'Peta': L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; OpenStreetMap', maxZoom: 19
-      })
-    };
+  function onCreated(e) {
+    if (!active) return;
+    drawn.clearLayers();
+    drawn.addLayer(e.layer);
+    var b = e.layer.getBounds();
+    generate({ west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() });
   }
 
-  function initMap() {
-    var layers = baseLayers();
-    map = L.map('map-contour', { layers: [layers['Topo']] }).setView([-2.9, 104.7], 5);
-    L.control.layers(layers).addTo(map);
-    var drawCtl = new L.Control.Draw({
+  function init(sharedMap) {
+    if (inited) return; inited = true;
+    map = sharedMap;
+    drawn = new L.FeatureGroup();
+    map.addLayer(drawn);
+    drawCtl = new L.Control.Draw({
       draw: {
         rectangle: { shapeOptions: { color: '#2563eb', weight: 2, fillOpacity: 0.05 } },
         polyline: false, polygon: false, circle: false, marker: false, circlemarker: false
       },
-      edit: { featureGroup: new L.FeatureGroup() }
+      edit: { featureGroup: drawn }
     });
+    map.on(L.Draw.Event.CREATED, onCreated);
+    map.on(L.Draw.Event.DELETED, function () { if (active) clearContours(); });
+    document.getElementById('ct-interval').addEventListener('change', function () {
+      if (lastGrid) renderContours(lastGrid, parseFloat(this.value));
+    });
+    document.getElementById('ct-geojson').onclick = downloadGeoJSON;
+    document.getElementById('ct-kml').onclick = downloadKML;
+    document.getElementById('ct-clear').onclick = function () { drawn.clearLayers(); clearContours(); };
+  }
+
+  function activate() {
+    active = true;
     map.addControl(drawCtl);
-    drawn = drawCtl.options.edit.featureGroup;
-    map.addLayer(drawn);
-    map.on(L.Draw.Event.CREATED, function (e) {
-      drawn.clearLayers();
-      drawn.addLayer(e.layer);
-      var b = e.layer.getBounds();
-      generate({ west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() });
-    });
-    map.on(L.Draw.Event.DELETED, clearContours);
-    setTimeout(function () { map.invalidateSize(); }, 100);
+  }
+  function deactivate() {
+    active = false;
+    map.removeControl(drawCtl);
   }
 
   function clearContours() {
@@ -125,17 +126,5 @@
     K.download('kontur.kml', K.build('Peta Kontur', pm), 'application/vnd.google-earth.kml+xml');
   }
 
-  function init() {
-    if (inited) return; inited = true;
-    initMap();
-    document.getElementById('ct-interval').addEventListener('change', function () {
-      if (lastGrid) renderContours(lastGrid, parseFloat(this.value));
-    });
-    document.getElementById('ct-geojson').onclick = downloadGeoJSON;
-    document.getElementById('ct-kml').onclick = downloadKML;
-    document.getElementById('ct-clear').onclick = function () { drawn.clearLayers(); clearContours(); };
-  }
-
-  function refresh() { if (map) setTimeout(function(){ map.invalidateSize(); }, 60); }
-  window.ToolContour = { init: init, refresh: refresh };
+  window.ToolContour = { init: init, activate: activate, deactivate: deactivate };
 })();

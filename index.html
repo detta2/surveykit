@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SurveyKit — Toolkit Surveyor & Lahan</title>
-<meta name="description" content="Toolkit gratis untuk surveyor, engineering & pemilik lahan: konverter koordinat UTM, profil ketinggian, peta kontur otomatis, ukur luas lahan & estimasi cut-fill dari citra satelit.">
+<title>SurveyKit — Peta & Toolkit Surveyor</title>
+<meta name="description" content="Peta satelit interaktif untuk surveyor, engineering & pemilik lahan: ukur luas lahan, profil ketinggian, kontur otomatis & konverter koordinat UTM — langsung di browser, gratis.">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
 <link rel="stylesheet" href="css/style.css">
@@ -12,153 +12,142 @@
 </head>
 <body>
 
-<header class="hero">
-  <div class="hero-inner">
-    <div class="logo">📐 SurveyKit</div>
-    <h1>Toolkit <span class="grad">Surveyor & Lahan</span></h1>
-    <p>Konversi koordinat, profil ketinggian, kontur otomatis & ukur lahan — langsung di browser, gratis, tanpa install.</p>
-  </div>
+<header class="topbar">
+  <div class="brand">📐 SurveyKit</div>
+  <nav class="toolbar" role="tablist" aria-label="Alat">
+    <button class="tool-btn active" data-tool="explore" role="tab">🛰️ Jelajah</button>
+    <button class="tool-btn" data-tool="converter" role="tab">📍 Koordinat</button>
+    <button class="tool-btn" data-tool="profile" role="tab">⛰️ Profil</button>
+    <button class="tool-btn" data-tool="contour" role="tab">🗺️ Kontur</button>
+    <button class="tool-btn" data-tool="measure" role="tab">📐 Ukur Lahan</button>
+  </nav>
 </header>
 
-<nav class="tabs" role="tablist">
-  <button class="tab-btn active" data-tab="home" role="tab">🛰️ Peta</button>
-  <button class="tab-btn" data-tab="converter" role="tab">📍 Konverter Koordinat</button>
-  <button class="tab-btn" data-tab="profile" role="tab">⛰️ Profil Ketinggian</button>
-  <button class="tab-btn" data-tab="contour" role="tab">🗺️ Kontur Otomatis</button>
-  <button class="tab-btn" data-tab="measure" role="tab">📐 Ukur Lahan & Cut-Fill</button>
-</nav>
+<div id="map"></div>
+<div id="coords" class="map-readout">Geser kursor di peta untuk koordinat · klik titik untuk LatLon + UTM</div>
 
-<main>
-
-<!-- ============ TAB UTAMA: PETA ============ -->
-<section class="tool-panel" id="panel-home">
-  <div class="hero-map-wrap">
-    <div id="map-home"></div>
-    <div id="home-coords" class="map-readout">Geser kursor di atas peta untuk lihat koordinat · klik untuk LatLon + UTM</div>
+<aside id="panel">
+  <div class="panel-head">
+    <b id="panel-title">🛰️ Jelajah</b>
+    <button id="panel-close" aria-label="Tutup panel">✕</button>
   </div>
-  <p class="hint home-hint">Jelajahi citra satelit, ganti basemap lewat ikon berlapis di kanan atas. Untuk analisis, buka tab alat di atas.</p>
-</section>
+  <div class="panel-body">
 
-<!-- ============ TOOL 1: KONVERTER ============ -->
-<section class="tool-panel" id="panel-converter">
-  <div class="card">
-    <h2>📍 Konverter Koordinat</h2>
-    <p class="desc">Ubah Lintang/Bujur (desimal atau DMS) ↔ UTM. Zona terdeteksi otomatis dari bujur.</p>
-
-    <h3>LatLon → UTM</h3>
-    <div class="form-row">
-      <label>Lintang <input id="cv-lat" placeholder="cth: -6.2 atau 6°12'0&quot;S"></label>
-      <label>Bujur <input id="cv-lon" placeholder="cth: 106.8 atau 106°48'0&quot;T"></label>
-      <button class="btn" id="cv-go1">Konversi</button>
-    </div>
-    <div id="cv-out" class="out"></div>
-
-    <h3>UTM → LatLon</h3>
-    <div class="form-row">
-      <label>Easting (m) <input id="cv-e" placeholder="cth: 702345"></label>
-      <label>Northing (m) <input id="cv-n" placeholder="cth: 9312345"></label>
-      <label>Zona <select id="cv-zone"></select></label>
-      <button class="btn" id="cv-go2">Konversi</button>
-    </div>
-    <div id="cv-out2" class="out"></div>
-  </div>
-
-  <div class="card">
-    <h2>📄 Konversi Batch (CSV)</h2>
-    <p class="desc">Format: <code>nama;lintang;bujur</code> atau <code>nama;easting;northing;zona</code> (cth zona: 48S). Pemisah ; , atau tab.</p>
-    <div class="form-row">
-      <label>Arah
-        <select id="cv-dir">
-          <option value="ll2utm">LatLon → UTM</option>
-          <option value="utm2ll">UTM → LatLon</option>
-        </select>
-      </label>
-      <label>Upload file <input type="file" id="cv-file" accept=".csv,.txt"></label>
-      <button class="btn" id="cv-run">Proses</button>
-    </div>
-    <textarea id="cv-csv" rows="6" placeholder="nama;lintang;bujur&#10;Patok A;-6.2146;106.8451&#10;Patok B;-6.2150;106.8460"></textarea>
-    <div id="cv-batch-out" class="out"></div>
-  </div>
-</section>
-
-<!-- ============ TOOL 2: PROFIL ============ -->
-<section class="tool-panel" id="panel-profile">
-  <div class="card">
-    <h2>⛰️ Profil Ketinggian</h2>
-    <p class="desc">Klik ikon garis <b>↗</b> di peta, lalu gambar jalur. Profil elevasi & kemiringan dihitung dari data DEM satelit (SRTM).</p>
-    <div id="map-profile" class="map"></div>
-  </div>
-  <div class="card">
-    <h3>Hasil Profil</h3>
-    <div id="pf-stats"><p class="hint">Gambar garis di peta untuk membuat profil ketinggian.</p></div>
-    <div id="pf-chart-wrap" style="display:none; position:relative;">
-      <canvas id="pf-chart"></canvas>
-      <div id="pf-tip" class="chart-tip" style="display:none;"></div>
-    </div>
-    <div id="pf-dl" class="btn-row" style="display:none; margin-top:12px;">
-      <button class="btn secondary" id="pf-csv">⬇ Unduh CSV</button>
-      <button class="btn secondary" id="pf-kml">⬇ Unduh KML</button>
-    </div>
-  </div>
-</section>
-
-<!-- ============ TOOL 3: KONTUR ============ -->
-<section class="tool-panel" id="panel-contour">
-  <div class="card">
-    <h2>🗺️ Peta Kontur Otomatis</h2>
-    <p class="desc">Klik ikon kotak <b>▭</b> di peta, gambar area, kontur langsung tergenerate dari DEM. Klik garis kontur untuk lihat elevasinya.</p>
-    <div class="form-row">
-      <label>Interval kontur
-        <select id="ct-interval">
-          <option value="1">1 m</option>
-          <option value="2">2 m</option>
-          <option value="5" selected>5 m</option>
-          <option value="10">10 m</option>
-          <option value="25">25 m</option>
-        </select>
-      </label>
-      <button class="btn secondary" id="ct-clear">🗑 Hapus</button>
-    </div>
-    <div id="map-contour" class="map"></div>
-  </div>
-  <div class="card">
-    <h3>Hasil Kontur</h3>
-    <div id="ct-info"><p class="hint">Gambar kotak di peta untuk generate garis kontur.</p></div>
-    <div id="ct-dl" class="btn-row" style="display:none; margin-top:12px;">
-      <button class="btn secondary" id="ct-geojson">⬇ Unduh GeoJSON</button>
-      <button class="btn secondary" id="ct-kml">⬇ Unduh KML</button>
-    </div>
-  </div>
-</section>
-
-<!-- ============ TOOL 4: UKUR LAHAN ============ -->
-<section class="tool-panel" id="panel-measure">
-  <div class="card">
-    <h2>📐 Ukur Lahan & Cut-Fill</h2>
-    <p class="desc">Klik ikon polygon <b>⬠</b>, gambar batas lahan di atas citra satelit. Luas dihitung otomatis (akurasi geodesi).</p>
-    <div id="map-measure" class="map"></div>
-  </div>
-  <div class="card">
-    <h3>Hasil Pengukuran</h3>
-    <div id="ms-basic"><p class="hint">Gambar polygon di atas citra satelit untuk mengukur lahan.</p></div>
-    <div id="ms-dem" class="out"></div>
-    <div id="ms-cutfill" style="display:none; margin-top:12px;">
-      <h3>Estimasi Cut & Fill</h3>
-      <div class="form-row">
-        <label>Elevasi rencana (m) <input id="ms-target" type="number" step="0.1"></label>
-        <button class="btn" id="ms-calc">Hitung Volume</button>
+    <section class="panel-sec" data-panel="explore">
+      <div class="card">
+        <h2>🛰️ Jelajah Peta</h2>
+        <p class="desc">Citra satelit seluruh Indonesia. Klik titik mana saja untuk melihat koordinat LatLon + UTM.</p>
+        <p class="hint">Pilih alat di toolbar atas, lalu <b>gambar langsung di peta ini</b>:</p>
+        <ul class="tool-list">
+          <li>📐 <b>Ukur Lahan</b> — gambar polygon batas lahan</li>
+          <li>⛰️ <b>Profil</b> — gambar garis jalur</li>
+          <li>🗺️ <b>Kontur</b> — gambar kotak area</li>
+          <li>📍 <b>Koordinat</b> — konversi LatLon ↔ UTM</li>
+        </ul>
       </div>
-      <div id="ms-cf-out" class="out"></div>
-    </div>
+      <p class="fine">Data elevasi: SRTM via AWS Terrain Tiles · citra: Esri · peta: OpenStreetMap.<br>Hasil bersifat estimasi untuk survei awal.</p>
+    </section>
+
+    <section class="panel-sec" data-panel="converter">
+      <div class="card">
+        <h2>📍 Konverter Koordinat</h2>
+        <p class="desc">Ubah Lintang/Bujur (desimal atau DMS) ↔ UTM. Zona terdeteksi otomatis dari bujur.</p>
+        <h3>LatLon → UTM</h3>
+        <div class="form-row">
+          <label>Lintang <input id="cv-lat" placeholder="cth: -6.2 atau 6°12'0&quot;S"></label>
+          <label>Bujur <input id="cv-lon" placeholder="cth: 106.8 atau 106°48'0&quot;T"></label>
+        </div>
+        <div class="btn-row">
+          <button class="btn" id="cv-go1">Konversi</button>
+          <button class="btn secondary" id="cv-pick">📍 Ambil dari peta</button>
+        </div>
+        <div id="cv-out" class="out"></div>
+        <h3>UTM → LatLon</h3>
+        <div class="form-row">
+          <label>Easting (m) <input id="cv-e" placeholder="cth: 702345"></label>
+          <label>Northing (m) <input id="cv-n" placeholder="cth: 9312345"></label>
+          <label>Zona <select id="cv-zone"></select></label>
+          <button class="btn" id="cv-go2">Konversi</button>
+        </div>
+        <div id="cv-out2" class="out"></div>
+      </div>
+      <div class="card">
+        <h2>📄 Konversi Batch (CSV)</h2>
+        <p class="desc">Format: <code>nama;lintang;bujur</code> atau <code>nama;easting;northing;zona</code> (cth zona: 48S).</p>
+        <div class="form-row">
+          <label>Arah
+            <select id="cv-dir">
+              <option value="ll2utm">LatLon → UTM</option>
+              <option value="utm2ll">UTM → LatLon</option>
+            </select>
+          </label>
+          <label>Upload file <input type="file" id="cv-file" accept=".csv,.txt"></label>
+          <button class="btn" id="cv-run">Proses</button>
+        </div>
+        <textarea id="cv-csv" rows="6" placeholder="nama;lintang;bujur&#10;Patok A;-6.2146;106.8451&#10;Patok B;-6.2150;106.8460"></textarea>
+        <div id="cv-batch-out" class="out"></div>
+      </div>
+    </section>
+
+    <section class="panel-sec" data-panel="profile">
+      <div class="card">
+        <h2>⛰️ Profil Ketinggian</h2>
+        <p class="desc">Klik ikon garis <b>↗</b> di kiri peta, lalu gambar jalur <b>langsung di peta</b>. Profil elevasi dihitung dari DEM satelit (SRTM).</p>
+        <div id="pf-stats"><p class="hint">Gambar garis di peta untuk membuat profil ketinggian.</p></div>
+        <div id="pf-chart-wrap" style="display:none; position:relative;">
+          <canvas id="pf-chart"></canvas>
+          <div id="pf-tip" class="chart-tip" style="display:none;"></div>
+        </div>
+        <div id="pf-dl" class="btn-row" style="display:none; margin-top:12px;">
+          <button class="btn secondary" id="pf-csv">⬇ Unduh CSV</button>
+          <button class="btn secondary" id="pf-kml">⬇ Unduh KML</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel-sec" data-panel="contour">
+      <div class="card">
+        <h2>🗺️ Kontur Otomatis</h2>
+        <p class="desc">Klik ikon kotak <b>▭</b> di kiri peta, gambar area <b>langsung di peta</b>. Klik garis kontur untuk lihat elevasinya.</p>
+        <div class="form-row">
+          <label>Interval kontur
+            <select id="ct-interval">
+              <option value="1">1 m</option>
+              <option value="2">2 m</option>
+              <option value="5" selected>5 m</option>
+              <option value="10">10 m</option>
+              <option value="25">25 m</option>
+            </select>
+          </label>
+          <button class="btn secondary" id="ct-clear">🗑 Hapus</button>
+        </div>
+        <div id="ct-info"><p class="hint">Gambar kotak di peta untuk generate garis kontur.</p></div>
+        <div id="ct-dl" class="btn-row" style="display:none; margin-top:12px;">
+          <button class="btn secondary" id="ct-geojson">⬇ Unduh GeoJSON</button>
+          <button class="btn secondary" id="ct-kml">⬇ Unduh KML</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel-sec" data-panel="measure">
+      <div class="card">
+        <h2>📐 Ukur Lahan & Cut-Fill</h2>
+        <p class="desc">Klik ikon polygon <b>⬠</b> di kiri peta, gambar batas lahan <b>langsung di atas citra satelit</b>.</p>
+        <div id="ms-basic"><p class="hint">Gambar polygon di atas citra satelit untuk mengukur lahan.</p></div>
+        <div id="ms-dem" class="out"></div>
+        <div id="ms-cutfill" style="display:none; margin-top:12px;">
+          <h3>Estimasi Cut & Fill</h3>
+          <div class="form-row">
+            <label>Elevasi rencana (m) <input id="ms-target" type="number" step="0.1"></label>
+            <button class="btn" id="ms-calc">Hitung Volume</button>
+          </div>
+          <div id="ms-cf-out" class="out"></div>
+        </div>
+      </div>
+    </section>
+
   </div>
-</section>
-
-</main>
-
-<footer>
-  <p>📐 <b>SurveyKit</b> — data elevasi: SRTM via AWS Terrain Tiles · citra: Esri · peta: OpenStreetMap</p>
-  <p class="fine">Hasil bersifat estimasi untuk survei awal. Untuk keperluan legal/teknis final, verifikasi dengan pengukuran lapangan & jasa surveyor berlisensi.</p>
-</footer>
+</aside>
 
 <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
@@ -166,7 +155,7 @@
 <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
 <script src="js/geo.js"></script>
 <script src="js/kml.js"></script>
-<script src="js/homemap.js"></script>
+<script src="js/gmap.js"></script>
 <script src="js/converter.js"></script>
 <script src="js/profile.js"></script>
 <script src="js/contour.js"></script>

@@ -184,6 +184,8 @@
     }
     document.getElementById('cv-go1').onclick = renderSingle;
     document.getElementById('cv-go2').onclick = renderReverse;
+    var pickBtn = document.getElementById('cv-pick');
+    if (pickBtn) pickBtn.onclick = function () { if (window.AppPickCoord) window.AppPickCoord(); };
     document.getElementById('cv-run').onclick = runBatch;
     document.getElementById('cv-file').addEventListener('change', function (ev) {
       var f = ev.target.files[0]; if (!f) return;
