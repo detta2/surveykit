@@ -3,6 +3,7 @@
   'use strict';
   var G = window.Geo, K = window.Kml;
   var inited = false, active = false, map = null, drawCtl = null, drawn = null;
+  var drawer = null;
   var polyLL = null;   // [[lon,lat],...]
   var demStats = null; // {min,max,avg,elevs,cellM2}
 
@@ -37,14 +38,17 @@
     map.on(L.Draw.Event.CREATED, onCreated);
     map.on(L.Draw.Event.DELETED, function () { if (active) clearAll(); });
     map.on(L.Draw.Event.EDITED, onEdited);
+    drawer = new L.Draw.Polygon(map, { shapeOptions: { color: '#16a34a', weight: 3 }, allowIntersection: false, showArea: true });
   }
 
   function activate() {
     active = true;
     map.addControl(drawCtl);
+    if (drawer) drawer.enable(); // langsung mode gambar: klik sudut-sudut lahan di peta
   }
   function deactivate() {
     active = false;
+    if (drawer && drawer.enabled()) drawer.disable();
     map.removeControl(drawCtl);
   }
 

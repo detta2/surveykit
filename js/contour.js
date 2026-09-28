@@ -3,7 +3,7 @@
   'use strict';
   var G = window.Geo, K = window.Kml;
   var inited = false, active = false, map = null, drawCtl = null, drawn = null, contourLayer = null;
-  var lastGrid = null, lastBbox = null;
+  var lastGrid = null, lastBbox = null, drawer = null;
 
   function onCreated(e) {
     if (!active) return;
@@ -27,6 +27,7 @@
     });
     map.on(L.Draw.Event.CREATED, onCreated);
     map.on(L.Draw.Event.DELETED, function () { if (active) clearContours(); });
+    drawer = new L.Draw.Rectangle(map, { shapeOptions: { color: '#2563eb', weight: 2, fillOpacity: 0.05 } });
     document.getElementById('ct-interval').addEventListener('change', function () {
       if (lastGrid) renderContours(lastGrid, parseFloat(this.value));
     });
@@ -38,9 +39,11 @@
   function activate() {
     active = true;
     map.addControl(drawCtl);
+    if (drawer) drawer.enable(); // langsung mode gambar: tarik kotak di peta
   }
   function deactivate() {
     active = false;
+    if (drawer && drawer.enabled()) drawer.disable();
     map.removeControl(drawCtl);
   }
 

@@ -4,6 +4,7 @@
   var G = window.Geo, K = window.Kml;
   var inited = false, active = false, map = null, drawCtl = null, drawn = null, hoverMarker = null;
   var samples = []; // {d (meter), lat, lon, e (meter)}
+  var drawer = null;
 
   function onCreated(e) {
     if (!active) return;
@@ -26,6 +27,7 @@
     });
     map.on(L.Draw.Event.CREATED, onCreated);
     map.on(L.Draw.Event.DELETED, function () { if (active) clearAll(); });
+    drawer = new L.Draw.Polyline(map, { shapeOptions: { color: '#e11d48', weight: 4 } });
     document.getElementById('pf-csv').onclick = downloadCSV;
     document.getElementById('pf-kml').onclick = downloadKML;
     window.addEventListener('resize', function () { if (samples.length) drawChart(); });
@@ -34,9 +36,11 @@
   function activate() {
     active = true;
     map.addControl(drawCtl);
+    if (drawer) drawer.enable(); // langsung mode gambar: klik titik-titik jalur di peta
   }
   function deactivate() {
     active = false;
+    if (drawer && drawer.enabled()) drawer.disable();
     map.removeControl(drawCtl);
   }
 
