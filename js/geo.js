@@ -142,6 +142,16 @@
     return 2 * R_EARTH * Math.asin(Math.sqrt(a));
   }
 
+  // bearing awal dari (lat1,lon1) ke (lat2,lon2): derajat 0..360 dari utara searah jarum jam.
+  // θ = atan2(sin(Δlon)·cos(lat2), cos(lat1)·sin(lat2) − sin(lat1)·cos(lat2)·cos(Δlon))
+  function bearing(lat1, lon1, lat2, lon2) {
+    var dLon = toRad(lon2 - lon1);
+    var y = Math.sin(dLon) * Math.cos(toRad(lat2));
+    var x = Math.cos(toRad(lat1)) * Math.sin(toRad(lat2)) -
+      Math.sin(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.cos(dLon);
+    return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+  }
+
   // luas polygon di atas bola bumi (Chamberlain-Duquette). coords: [[lon,lat],...]
   function ringArea(coords) {
     var area = 0, len = coords.length;
@@ -201,6 +211,7 @@
     fetchElevationGrid: fetchElevationGrid,
     sampleGrid: sampleGrid,
     haversine: haversine,
+    bearing: bearing,
     ringArea: ringArea,
     polylineLength: polylineLength,
     pointInPolygon: pointInPolygon,

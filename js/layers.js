@@ -360,6 +360,10 @@
       var i = +btn.getAttribute('data-bm'), arr = getBMs(), b = arr[i];
       if (!b) return;
       if (btn.getAttribute('data-act') === 'del') { arr.splice(i, 1); setBMs(arr); renderBMs(); }
+      else if (btn.getAttribute('data-act') === 'nav') {
+        if (window.NavPancang) NavPancang.start(b);
+        else toast('Navigasinya belum siap, coba lagi');
+      }
       else map.flyTo([b.lat, b.lon], b.z, { duration: 1.2 });
     });
     renderBMs();
@@ -371,6 +375,7 @@
     list.innerHTML = arr.length ? arr.map(function (b, i) {
       return '<div class="bm-row">' +
         '<button class="bm-go" data-bm="' + i + '" data-act="go" title="Buka lokasi ini">' + PIN + '<span>' + esc(b.name) + '</span></button>' +
+        '<button class="bm-nav" data-bm="' + i + '" data-act="nav" title="Navigasi ke sini">🧭 Navigasi</button>' +
         '<button class="bm-del" data-bm="' + i + '" data-act="del" title="Hapus">✕</button></div>';
     }).join('') : '<p class="hint">Belum ada yang disimpan. Arahkan peta ke lokasi favorit, kasih nama, terus simpan.</p>';
   }

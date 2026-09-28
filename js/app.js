@@ -134,6 +134,7 @@
   document.addEventListener('DOMContentLoaded', function () {
     map = window.GMap.init();
     if (window.LayerManager) LayerManager.init(map);
+    if (window.NavPancang) NavPancang.init(map);
     coordLayer = L.layerGroup().addTo(map);
     if (window.LayerManager) LayerManager.register('Titik koordinat', coordLayer);
 
