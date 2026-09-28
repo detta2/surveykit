@@ -88,7 +88,7 @@
     function doSearch(q) {
       if (q.length < 3) { resBox.style.display = 'none'; resBox.innerHTML = ''; return; }
       resBox.innerHTML = '<div class="s-item s-loading">Mencari…</div>';
-      resBox.style.display = '';
+      resBox.style.display = 'block';
       fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&countrycodes=id&limit=6&accept-language=id&q=' + encodeURIComponent(q))
         .then(function (r) { return r.json(); })
         .then(function (arr) {
@@ -130,7 +130,7 @@
       if (e.key === 'Escape') { resBox.style.display = 'none'; input.blur(); }
     });
     input.addEventListener('focus', function () {
-      if (resBox.innerHTML) resBox.style.display = '';
+      if (resBox.innerHTML) resBox.style.display = 'block';
     });
   }
 
