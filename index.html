@@ -41,9 +41,9 @@
         <p class="desc">Citra satelit seluruh Indonesia. Klik titik mana saja untuk melihat koordinat LatLon + UTM.</p>
         <p class="hint">Pilih alat di toolbar atas, lalu <b>gambar langsung di peta ini</b>:</p>
         <ul class="tool-list">
-          <li>📐 <b>Ukur Lahan</b> — gambar polygon batas lahan</li>
-          <li>⛰️ <b>Profil</b> — gambar garis jalur</li>
-          <li>🗺️ <b>Kontur</b> — gambar kotak area</li>
+          <li>📐 <b>Ukur Lahan</b> — klik sudut-sudut batas lahan, tekan ✓ Selesai</li>
+          <li>⛰️ <b>Profil</b> — klik 2 titik (A → B)</li>
+          <li>🗺️ <b>Kontur</b> — klik 1 titik, kontur otomatis sekitarnya</li>
           <li>📍 <b>Koordinat</b> — konversi LatLon ↔ UTM</li>
         </ul>
       </div>
@@ -94,8 +94,8 @@
     <section class="panel-sec" data-panel="profile">
       <div class="card">
         <h2>⛰️ Profil Ketinggian</h2>
-        <p class="desc"><b>Langsung tarik garis di peta</b> — klik tiap titik belokan, klik dua kali untuk selesai. Profil elevasi dihitung dari DEM satelit (SRTM).</p>
-        <div id="pf-stats"><p class="hint">Gambar garis di peta untuk membuat profil ketinggian.</p></div>
+        <p class="desc"><b>Klik 2 titik di peta</b>: titik awal (A), lalu titik akhir (B) — profil ketinggian garis lurus langsung dihitung dari DEM satelit (SRTM).</p>
+        <div id="pf-stats"><p class="hint">Klik 2 titik di peta: titik awal (A), lalu titik akhir (B).</p></div>
         <div id="pf-chart-wrap" style="display:none; position:relative;">
           <canvas id="pf-chart"></canvas>
           <div id="pf-tip" class="chart-tip" style="display:none;"></div>
@@ -110,7 +110,7 @@
     <section class="panel-sec" data-panel="contour">
       <div class="card">
         <h2>🗺️ Kontur Otomatis</h2>
-        <p class="desc"><b>Langsung tarik kotak di peta</b> untuk memilih daerah yang mau dikontur. Klik garis kontur untuk lihat elevasinya.</p>
+        <p class="desc"><b>Klik 1 titik di peta</b> — garis kontur otomatis dibuat untuk daerah di sekitar titik itu (luas area menyesuaikan zoom).</p>
         <div class="form-row">
           <label>Interval kontur
             <select id="ct-interval">
@@ -123,7 +123,7 @@
           </label>
           <button class="btn secondary" id="ct-clear">🗑 Hapus</button>
         </div>
-        <div id="ct-info"><p class="hint">Gambar kotak di peta untuk generate garis kontur.</p></div>
+        <div id="ct-info"><p class="hint">Klik satu titik di peta untuk membuat kontur daerah sekitarnya.</p></div>
         <div id="ct-dl" class="btn-row" style="display:none; margin-top:12px;">
           <button class="btn secondary" id="ct-geojson">⬇ Unduh GeoJSON</button>
           <button class="btn secondary" id="ct-kml">⬇ Unduh KML</button>
@@ -134,8 +134,11 @@
     <section class="panel-sec" data-panel="measure">
       <div class="card">
         <h2>📐 Ukur Lahan & Cut-Fill</h2>
-        <p class="desc"><b>Langsung klik di atas citra satelit</b> — tiap klik jadi sudut lahan, klik dua kali untuk menutup polygon.</p>
-        <div id="ms-basic"><p class="hint">Gambar polygon di atas citra satelit untuk mengukur lahan.</p></div>
+        <p class="desc"><b>Klik tiap sudut lahan</b> di citra satelit, lalu tekan <b>✓ Selesai & Hitung</b>.</p>
+        <div class="btn-row" style="margin-bottom:10px;">
+          <button class="btn" id="ms-finish">✓ Selesai & Hitung</button>
+        </div>
+        <div id="ms-basic"><p class="hint">Klik tiap sudut lahan di citra satelit, lalu tekan <b>✓ Selesai & Hitung</b>.</p></div>
         <div id="ms-dem" class="out"></div>
         <div id="ms-cutfill" style="display:none; margin-top:12px;">
           <h3>Estimasi Cut & Fill</h3>

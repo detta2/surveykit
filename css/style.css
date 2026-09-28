@@ -238,6 +238,15 @@ textarea { resize: vertical; font-family: var(--mono); font-size: 12.5px; }
 .compass-ctl svg { display: block; }
 @keyframes compass-in { from { opacity: 0; transform: scale(0.6) rotate(-40deg); } }
 
+/* ---------- chip label titik A/B ---------- */
+.leaflet-div-icon.pt-chip { background: none; border: none; }
+.pt-chip span {
+  display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%;
+  color: #fff; font-size: 12px; font-weight: 800; font-family: var(--font);
+  border: 2px solid #fff; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.45);
+  transform: translate(-2px, -2px);
+}
+
 /* ---------- label garis lintang/bujur ---------- */
 .leaflet-div-icon.grat-label {
   background: rgba(11, 18, 27, 0.72);

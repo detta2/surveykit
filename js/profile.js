@@ -1,16 +1,29 @@
-/* profile.js — Tool Profil Ketinggian: gambar garis DI PETA BERSAMA */
+/* profile.js — Tool Profil Ketinggian: KLIK 2 TITIK (A -> B) langsung jadi profil */
 (function () {
   'use strict';
   var G = window.Geo, K = window.Kml;
-  var inited = false, active = false, map = null, drawCtl = null, drawn = null, hoverMarker = null;
+  var inited = false, active = false, map = null, drawn = null, hoverMarker = null;
   var samples = []; // {d (meter), lat, lon, e (meter)}
-  var drawer = null;
+  var pts = [];     // titik klik [A, B]
 
-  function onCreated(e) {
+  function ptChip(latlng, label, color) {
+    return L.marker(latlng, {
+      icon: L.divIcon({ className: 'pt-chip', html: '<span style="background:' + color + '">' + label + '</span>' }),
+      interactive: false, keyboard: false
+    });
+  }
+
+  function onMapClick(e) {
     if (!active) return;
-    drawn.clearLayers();
-    drawn.addLayer(e.layer);
-    analyze(e.layer.getLatLngs());
+    if (pts.length >= 2) clearAll(); // klik ketiga = mulai jalur baru
+    pts.push(e.latlng);
+    drawn.addLayer(ptChip(e.latlng, pts.length === 1 ? 'A' : 'B', pts.length === 1 ? '#16a34a' : '#e11d48'));
+    if (pts.length === 2) {
+      drawn.addLayer(L.polyline(pts, { color: '#e11d48', weight: 4 }));
+      analyze(pts);
+    } else {
+      document.getElementById('pf-stats').innerHTML = '<p class="hint">Titik A tercatat. Klik titik <b>B</b> untuk melihat profilnya.</p>';
+    }
   }
 
   function init(sharedMap) {
@@ -18,16 +31,6 @@
     map = sharedMap;
     drawn = new L.FeatureGroup();
     map.addLayer(drawn);
-    drawCtl = new L.Control.Draw({
-      draw: {
-        polyline: { shapeOptions: { color: '#e11d48', weight: 4 } },
-        polygon: false, rectangle: false, circle: false, marker: false, circlemarker: false
-      },
-      edit: { featureGroup: drawn }
-    });
-    map.on(L.Draw.Event.CREATED, onCreated);
-    map.on(L.Draw.Event.DELETED, function () { if (active) clearAll(); });
-    drawer = new L.Draw.Polyline(map, { shapeOptions: { color: '#e11d48', weight: 4 } });
     document.getElementById('pf-csv').onclick = downloadCSV;
     document.getElementById('pf-kml').onclick = downloadKML;
     window.addEventListener('resize', function () { if (samples.length) drawChart(); });
@@ -35,19 +38,22 @@
 
   function activate() {
     active = true;
-    if (!drawCtl._map) map.addControl(drawCtl);
-    if (drawer) drawer.enable(); // langsung mode gambar: klik titik-titik jalur di peta
+    map.off('click', onMapClick);
+    map.on('click', onMapClick);
+    document.getElementById('map').style.cursor = 'crosshair';
   }
   function deactivate() {
     active = false;
-    if (drawer && drawer.enabled()) drawer.disable();
-    map.removeControl(drawCtl);
+    map.off('click', onMapClick);
+    document.getElementById('map').style.cursor = '';
   }
 
   function clearAll() {
     samples = [];
+    pts = [];
+    drawn.clearLayers();
     document.getElementById('pf-chart-wrap').style.display = 'none';
-    document.getElementById('pf-stats').innerHTML = '<p class="hint">Gambar garis di peta untuk membuat profil ketinggian.</p>';
+    document.getElementById('pf-stats').innerHTML = '<p class="hint">Klik 2 titik di peta: titik awal (A), lalu titik akhir (B).</p>';
     document.getElementById('pf-dl').style.display = 'none';
     if (hoverMarker) { map.removeLayer(hoverMarker); hoverMarker = null; }
   }

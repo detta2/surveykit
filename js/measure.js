@@ -39,6 +39,9 @@
     map.on(L.Draw.Event.DELETED, function () { if (active) clearAll(); });
     map.on(L.Draw.Event.EDITED, onEdited);
     drawer = new L.Draw.Polygon(map, { shapeOptions: { color: '#16a34a', weight: 3 }, allowIntersection: false, showArea: true });
+    document.getElementById('ms-finish').onclick = function () {
+      if (drawer && drawer.enabled()) drawer.completeShape();
+    };
   }
 
   function activate() {
@@ -54,7 +57,7 @@
 
   function clearAll() {
     polyLL = null; demStats = null;
-    document.getElementById('ms-basic').innerHTML = '<p class="hint">Gambar polygon di atas citra satelit untuk mengukur lahan.</p>';
+    document.getElementById('ms-basic').innerHTML = '<p class="hint">Klik tiap sudut lahan di citra satelit, lalu tekan <b>✓ Selesai & Hitung</b>.</p>';
     document.getElementById('ms-dem').innerHTML = '';
     document.getElementById('ms-cutfill').style.display = 'none';
   }
