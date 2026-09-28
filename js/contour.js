@@ -38,7 +38,7 @@
 
   function activate() {
     active = true;
-    map.addControl(drawCtl);
+    if (!drawCtl._map) map.addControl(drawCtl);
     if (drawer) drawer.enable(); // langsung mode gambar: tarik kotak di peta
   }
   function deactivate() {

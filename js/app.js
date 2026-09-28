@@ -47,8 +47,13 @@
 
   function setTool(name) {
     if (name === current) {
-      // klik alat yang sama: buka/tutup panel
-      document.getElementById('panel').classList.toggle('open');
+      // klik alat yang sama: untuk draw tools = mulai gambar baru; lainnya = buka/tutup panel
+      if (DRAW_TOOLS[name]) {
+        document.getElementById('panel').classList.add('open');
+        window[DRAW_TOOLS[name]].activate();
+      } else {
+        document.getElementById('panel').classList.toggle('open');
+      }
       return;
     }
     deactivateDraw();

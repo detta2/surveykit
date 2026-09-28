@@ -35,7 +35,7 @@
 
   function activate() {
     active = true;
-    map.addControl(drawCtl);
+    if (!drawCtl._map) map.addControl(drawCtl);
     if (drawer) drawer.enable(); // langsung mode gambar: klik titik-titik jalur di peta
   }
   function deactivate() {

@@ -43,7 +43,7 @@
 
   function activate() {
     active = true;
-    map.addControl(drawCtl);
+    if (!drawCtl._map) map.addControl(drawCtl);
     if (drawer) drawer.enable(); // langsung mode gambar: klik sudut-sudut lahan di peta
   }
   function deactivate() {
