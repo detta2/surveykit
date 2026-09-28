@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SurveyKit — Peta & Toolkit Surveyor</title>
 <meta name="description" content="Peta satelit interaktif untuk surveyor, engineering & pemilik lahan: ukur luas lahan, profil ketinggian, kontur otomatis & konverter koordinat UTM — langsung di browser, gratis.">
+<meta name="theme-color" content="#0b1220">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.css">
 <link rel="stylesheet" href="css/style.css">
@@ -12,16 +16,14 @@
 </head>
 <body>
 
-<header class="topbar">
-  <div class="brand">📐 SurveyKit</div>
-  <nav class="toolbar" role="tablist" aria-label="Alat">
-    <button class="tool-btn active" data-tool="explore" role="tab">🛰️ Jelajah</button>
-    <button class="tool-btn" data-tool="converter" role="tab">📍 Koordinat</button>
-    <button class="tool-btn" data-tool="profile" role="tab">⛰️ Profil</button>
-    <button class="tool-btn" data-tool="contour" role="tab">🗺️ Kontur</button>
-    <button class="tool-btn" data-tool="measure" role="tab">📐 Ukur Lahan</button>
-  </nav>
-</header>
+<div class="brand-chip glass"><span class="dot">📐</span><b>SurveyKit</b><span>toolkit surveyor</span></div>
+<nav class="toolbar glass" role="tablist" aria-label="Alat">
+  <button class="tool-btn active" data-tool="explore" role="tab"><span class="ico">🛰️</span><span class="lbl">Jelajah</span></button>
+  <button class="tool-btn" data-tool="converter" role="tab"><span class="ico">📍</span><span class="lbl">Koordinat</span></button>
+  <button class="tool-btn" data-tool="profile" role="tab"><span class="ico">⛰️</span><span class="lbl">Profil</span></button>
+  <button class="tool-btn" data-tool="contour" role="tab"><span class="ico">🗺️</span><span class="lbl">Kontur</span></button>
+  <button class="tool-btn" data-tool="measure" role="tab"><span class="ico">📐</span><span class="lbl">Ukur Lahan</span></button>
+</nav>
 
 <div id="map"></div>
 <div id="coords" class="map-readout">Geser kursor di peta untuk koordinat · klik titik untuk LatLon + UTM</div>

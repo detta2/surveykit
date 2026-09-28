@@ -129,7 +129,7 @@
     function Y(e) { return padT + (1 - (e - mn) / (mx - mn)) * ih; }
 
     ctx.clearRect(0, 0, W, H);
-    ctx.strokeStyle = '#e5e7eb'; ctx.fillStyle = '#6b7280'; ctx.font = '11px system-ui';
+    ctx.strokeStyle = 'rgba(255,255,255,0.10)'; ctx.fillStyle = '#93a1b0'; ctx.font = '11px Inter, system-ui';
     ctx.lineWidth = 1; ctx.textAlign = 'right';
     for (var gi = 0; gi <= 4; gi++) {
       var ev = mn + (mx - mn) * gi / 4, yy = Y(ev);
@@ -142,10 +142,10 @@
       ctx.fillText(G.fmtDist(dv), X(dv), H - 10);
     }
     var grad = ctx.createLinearGradient(0, padT, 0, padT + ih);
-    grad.addColorStop(0, 'rgba(22,163,74,.45)'); grad.addColorStop(1, 'rgba(22,163,74,.05)');
+    grad.addColorStop(0, 'rgba(52,211,153,.45)'); grad.addColorStop(1, 'rgba(52,211,153,.05)');
     ctx.beginPath(); ctx.moveTo(X(ds[0]), Y(es[0]));
     for (var i = 1; i < samples.length; i++) ctx.lineTo(X(ds[i]), Y(es[i]));
-    ctx.strokeStyle = '#16a34a'; ctx.lineWidth = 2.5; ctx.stroke();
+    ctx.strokeStyle = '#34d399'; ctx.lineWidth = 2.5; ctx.stroke();
     ctx.lineTo(X(dMax), padT + ih); ctx.lineTo(X(0), padT + ih); ctx.closePath();
     ctx.fillStyle = grad; ctx.fill();
 
