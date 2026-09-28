@@ -181,7 +181,7 @@
     function doSearch(q) {
       var c = parseCoord(q);
       if (c) {
-        resBox.innerHTML = '<div class="s-item" data-coord="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:13px;height:13px;vertical-align:-2px;margin-right:5px;color:var(--acc)"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg><b>' + esc(c.label) + '</b><span>Terbang ke koordinat</span></div>';
+        resBox.innerHTML = '<div class="s-item" data-coord="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:13px;height:13px;vertical-align:-2px;margin-right:5px;color:var(--acc)"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg><b>' + esc(c.label) + '</b><span>Ketuk buat ke sana</span></div>';
         resBox.style.display = 'block';
         resBox.querySelector('[data-coord]').onclick = function () { goToCoord(c.lat, c.lon, c.label); };
         return;
@@ -217,7 +217,7 @@
           });
         })
         .catch(function () {
-          resBox.innerHTML = '<div class="s-item s-loading">Gagal mencari. Coba lagi.</div>';
+          resBox.innerHTML = '<div class="s-item s-loading">Pencariannya gagal. Coba lagi.</div>';
         });
     }
 

@@ -76,7 +76,7 @@
     var e = find(id); if (!e || !e.removable) return;
     map.removeLayer(e.layer);
     entries = entries.filter(function (x) { return x.id !== id; });
-    toast('Layer dihapus: ' + e.name);
+    toast(e.name + ' dihapus');
     renderList();
   }
   function applyOpacity(layer, v) {
@@ -94,7 +94,7 @@
     var box = document.getElementById('lyr-list');
     if (!box) return;
     if (!entries.length) {
-      box.innerHTML = '<p class="hint">Belum ada layer. Hasil Kontur, Ukur Lahan, Profil, import file, dan posisi GPS akan tercatat di sini.</p>';
+      box.innerHTML = '<p class="hint">Belum ada layer. Hasil kontur, ukur lahan, profil, file yang diimpor, dan posisi GPS bakal muncul di sini.</p>';
       return;
     }
     box.innerHTML = entries.map(function (e) {
@@ -111,13 +111,13 @@
   function readText(f, cb) {
     var r = new FileReader();
     r.onload = function () { cb(r.result); };
-    r.onerror = function () { toast('Gagal baca ' + f.name); };
+    r.onerror = function () { toast('Gagal buka ' + f.name); };
     r.readAsText(f);
   }
   function readBuf(f, cb) {
     var r = new FileReader();
     r.onload = function () { cb(r.result); };
-    r.onerror = function () { toast('Gagal baca ' + f.name); };
+    r.onerror = function () { toast('Gagal buka ' + f.name); };
     r.readAsArrayBuffer(f);
   }
   function initImport() {
@@ -139,25 +139,25 @@
       var ext = (f.name.split('.').pop() || '').toLowerCase();
       if (ext === 'geojson' || ext === 'json') {
         readText(f, function (t) {
-          try { addImport(f.name, JSON.parse(t)); } catch (e) { toast('Gagal baca ' + f.name); }
+          try { addImport(f.name, JSON.parse(t)); } catch (e) { toast('Gagal buka ' + f.name); }
         });
       } else if (ext === 'kml' || ext === 'gpx') {
         readText(f, function (t) {
-          if (typeof toGeoJSON === 'undefined') { toast('Pustaka ' + ext.toUpperCase() + ' belum termuat'); return; }
+          if (typeof toGeoJSON === 'undefined') { toast('Pustaka ' + ext.toUpperCase() + ' belum siap, coba lagi'); return; }
           try {
             var xml = new DOMParser().parseFromString(t, 'text/xml');
             addImport(f.name, ext === 'kml' ? toGeoJSON.kml(xml) : toGeoJSON.gpx(xml));
-          } catch (e) { toast('Gagal baca ' + f.name); }
+          } catch (e) { toast('Gagal buka ' + f.name); }
         });
       } else if (ext === 'zip' || ext === 'shp') {
         readBuf(f, function (b) {
-          if (typeof shp === 'undefined') { toast('Pustaka SHP belum termuat'); return; }
-          toast('Membaca shapefile…');
+          if (typeof shp === 'undefined') { toast('Pustaka SHP belum siap, coba lagi'); return; }
+          toast('Buka shapefile…');
           shp(b).then(function (gj) { addImport(f.name, gj); })
-                .catch(function () { toast('Gagal baca shapefile ' + f.name); });
+                .catch(function () { toast('Gagal buka shapefile ' + f.name); });
         });
       } else {
-        toast('Format .' + ext + ' belum didukung');
+        toast('Format .' + ext + ' nggak didukung');
       }
     });
   }
@@ -168,7 +168,7 @@
   }
   function addImport(name, gj) {
     if (gj && gj.type === 'Feature') gj = { type: 'FeatureCollection', features: [gj] };
-    if (!gj || !gj.features || !gj.features.length) { toast('File kosong: ' + name); return; }
+    if (!gj || !gj.features || !gj.features.length) { toast('Filenya kosong: ' + name); return; }
     var short = name.replace(/\.(geojson|json|kml|gpx|zip|shp)$/i, '');
     var layer = L.geoJSON(gj, {
       style: styleFor,
@@ -186,7 +186,7 @@
     }).addTo(map);
     register(short, layer);
     try { map.flyToBounds(layer.getBounds().pad(0.15), { duration: 1 }); } catch (e) {}
-    toast('File dimuat: ' + short);
+    toast(short + ' masuk ke peta');
   }
 
   // ---------- export peta jadi PNG (renderer sendiri) ----------
@@ -220,7 +220,7 @@
     ctx.restore();
   }
   function exportPNG() {
-    toast('Menyiapkan gambar…');
+    toast('Bikin gambar…');
     var mapEl = document.getElementById('map');
     var size = map.getSize();
     var canvas = document.createElement('canvas');
@@ -235,14 +235,14 @@
     function finalize(ok) {
       if (finished) return; finished = true;
       clearTimeout(timer);
-      if (!ok) { toast('Gagal membuat gambar'); return; }
+      if (!ok) { toast('Gagal bikin gambar'); return; }
       try {
         var a = document.createElement('a');
         a.download = 'surveykit-' + Date.now() + '.png';
         a.href = canvas.toDataURL('image/png');
         document.body.appendChild(a); a.click(); a.remove();
-        toast('Gambar peta tersimpan');
-      } catch (e) { toast('Gagal menyimpan gambar'); }
+        toast('Gambar tersimpan');
+      } catch (e) { toast('Gagal nyimpen gambar'); }
     }
 
     // 1) tiles basemap
@@ -351,7 +351,7 @@
       arr.push({ name: nm, lat: +c.lat.toFixed(6), lon: +c.lng.toFixed(6), z: map.getZoom() });
       setBMs(arr); inp.value = '';
       renderBMs();
-      toast('Bookmark tersimpan: ' + nm);
+      toast('Lokasi tersimpan: ' + nm);
     }
     save.addEventListener('click', doSave);
     inp.addEventListener('keydown', function (e) { if (e.key === 'Enter') doSave(); });
@@ -370,9 +370,9 @@
     var arr = getBMs();
     list.innerHTML = arr.length ? arr.map(function (b, i) {
       return '<div class="bm-row">' +
-        '<button class="bm-go" data-bm="' + i + '" data-act="go" title="Terbang ke lokasi">' + PIN + '<span>' + esc(b.name) + '</span></button>' +
+        '<button class="bm-go" data-bm="' + i + '" data-act="go" title="Buka lokasi ini">' + PIN + '<span>' + esc(b.name) + '</span></button>' +
         '<button class="bm-del" data-bm="' + i + '" data-act="del" title="Hapus bookmark">✕</button></div>';
-    }).join('') : '<p class="hint">Belum ada bookmark. Geser peta ke lokasi favorit, beri nama, lalu simpan.</p>';
+    }).join('') : '<p class="hint">Belum ada yang tersimpan. Arahkan peta ke lokasi favorit, kasih nama, terus simpan.</p>';
   }
 
   window.LayerManager = {
