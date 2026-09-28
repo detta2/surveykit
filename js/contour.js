@@ -130,6 +130,28 @@
     });
   }
 
+  // statistik tambahan dari grid DEM: elevasi, beda tinggi, kemiringan, luas, klasifikasi medan
+  function gridStats(grid) {
+    var d = grid.data, n = d.length, sum = 0, mn = Infinity, mx = -Infinity, i, v;
+    for (i = 0; i < n; i++) { v = d[i]; sum += v; if (v < mn) mn = v; if (v > mx) mx = v; }
+    var w = grid.w, h = grid.h;
+    var latC = (grid.north + grid.south) / 2 * Math.PI / 180;
+    var mxM = (grid.east - grid.west) / w * 111320 * Math.cos(latC); // meter per pixel (x)
+    var myM = (grid.north - grid.south) / h * 110540;               // meter per pixel (y)
+    var sSum = 0, sCnt = 0, sMax = 0, x, y, dzdx, dzdy, s;
+    for (y = 1; y < h - 1; y++) {
+      for (x = 1; x < w - 1; x++) {
+        dzdx = (d[y * w + x + 1] - d[y * w + x - 1]) / (2 * mxM);
+        dzdy = (d[(y + 1) * w + x] - d[(y - 1) * w + x]) / (2 * myM);
+        s = Math.sqrt(dzdx * dzdx + dzdy * dzdy) * 100; // persen
+        sSum += s; sCnt++; if (s > sMax) sMax = s;
+      }
+    }
+    var relief = mx - mn;
+    var medan = relief < 25 ? 'Datar' : relief < 100 ? 'Bergelombang' : relief < 300 ? 'Berbukit' : 'Bergunung';
+    return { mn: mn, mx: mx, mean: sum / n, relief: relief, slopeMean: sCnt ? sSum / sCnt : 0, slopeMax: sMax, medan: medan };
+  }
+
   function renderContours(grid, interval) {
     var d = grid.data, mn = Infinity, mx = -Infinity, i;
     for (i = 0; i < d.length; i++) { if (d[i] < mn) mn = d[i]; if (d[i] > mx) mx = d[i]; }
@@ -167,10 +189,25 @@
     }).addTo(map);
 
     var nLines = features.length;
+    var st = gridStats(grid);
+    // luas area kotak (ha / km2)
+    var latC = (grid.north + grid.south) / 2 * Math.PI / 180;
+    var areaM2 = (grid.east - grid.west) * 111320 * Math.cos(latC) * (grid.north - grid.south) * 110540;
+    var areaTxt = areaM2 >= 1000000 ? G.fmtNum(areaM2 / 1000000, 2) + ' km²' : G.fmtNum(areaM2 / 10000, 1) + ' ha';
     document.getElementById('ct-info').innerHTML =
-      '<p class="ok-text">✔ ' + nLines + ' garis kontur (interval ' + interval + ' m), ' +
-      'elevasi ' + G.fmtNum(mn, 0) + '–' + G.fmtNum(mx, 0) + ' m. Klik garis untuk lihat nilainya.</p>' +
-      '<p class="hint">Garis tebal = kontur indeks (kelipatan ' + (interval * 5) + ' m).</p>';
+      '<p class="ok-text">✔ ' + nLines + ' garis kontur (interval ' + interval + ' m). ' +
+      'Klik garis untuk lihat nilainya.</p>' +
+      '<p class="hint">Garis tebal = kontur indeks (kelipatan ' + (interval * 5) + ' m).</p>' +
+      '<div class="res-grid">' +
+      '<div class="res"><span>📏 Luas area</span><b>' + areaTxt + '</b></div>' +
+      '<div class="res"><span>📍 Elevasi titik tanda</span><b>' + (pin ? G.fmtNum(G.sampleGrid(grid, pin.getLatLng().lng, pin.getLatLng().lat), 1) + ' m' : '–') + '</b></div>' +
+      '<div class="res"><span>⛰️ Elevasi min</span><b>' + G.fmtNum(st.mn, 0) + ' m</b></div>' +
+      '<div class="res"><span>⛰️ Elevasi maks</span><b>' + G.fmtNum(st.mx, 0) + ' m</b></div>' +
+      '<div class="res"><span>📊 Elevasi rata-rata</span><b>' + G.fmtNum(st.mean, 0) + ' m</b></div>' +
+      '<div class="res"><span>📐 Beda tinggi</span><b>' + G.fmtNum(st.relief, 0) + ' m</b></div>' +
+      '<div class="res"><span>〰️ Kemiringan rata-rata</span><b>' + G.fmtNum(st.slopeMean, 1) + ' %</b></div>' +
+      '<div class="res"><span>🏔️ Perkiraan medan</span><b>' + st.medan + '</b></div>' +
+      '</div>';
     document.getElementById('ct-dl').style.display = '';
     contourLayer._fc = fc;
   }
