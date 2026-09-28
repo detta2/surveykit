@@ -21,13 +21,23 @@
 </header>
 
 <nav class="tabs" role="tablist">
-  <button class="tab-btn active" data-tab="converter" role="tab">📍 Konverter Koordinat</button>
+  <button class="tab-btn active" data-tab="home" role="tab">🛰️ Peta</button>
+  <button class="tab-btn" data-tab="converter" role="tab">📍 Konverter Koordinat</button>
   <button class="tab-btn" data-tab="profile" role="tab">⛰️ Profil Ketinggian</button>
   <button class="tab-btn" data-tab="contour" role="tab">🗺️ Kontur Otomatis</button>
   <button class="tab-btn" data-tab="measure" role="tab">📐 Ukur Lahan & Cut-Fill</button>
 </nav>
 
 <main>
+
+<!-- ============ TAB UTAMA: PETA ============ -->
+<section class="tool-panel" id="panel-home">
+  <div class="hero-map-wrap">
+    <div id="map-home"></div>
+    <div id="home-coords" class="map-readout">Geser kursor di atas peta untuk lihat koordinat · klik untuk LatLon + UTM</div>
+  </div>
+  <p class="hint home-hint">Jelajahi citra satelit, ganti basemap lewat ikon berlapis di kanan atas. Untuk analisis, buka tab alat di atas.</p>
+</section>
 
 <!-- ============ TOOL 1: KONVERTER ============ -->
 <section class="tool-panel" id="panel-converter">
@@ -156,6 +166,7 @@
 <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
 <script src="js/geo.js"></script>
 <script src="js/kml.js"></script>
+<script src="js/homemap.js"></script>
 <script src="js/converter.js"></script>
 <script src="js/profile.js"></script>
 <script src="js/contour.js"></script>

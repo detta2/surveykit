@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   var tools = {
+    home: function () { window.ToolHome.init(); window.ToolHome.refresh(); },
     converter: function () { window.ToolConverter.init(); },
     profile: function () { window.ToolProfile.init(); window.ToolProfile.refresh(); },
     contour: function () { window.ToolContour.init(); window.ToolContour.refresh(); },
@@ -27,6 +28,6 @@
     document.querySelectorAll('.tab-btn').forEach(function (b) {
       b.addEventListener('click', function () { switchTab(b.dataset.tab); });
     });
-    switchTab('converter');
+    switchTab('home');
   });
 })();

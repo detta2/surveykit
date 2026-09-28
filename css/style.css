@@ -100,6 +100,18 @@ textarea { resize: vertical; font-family: ui-monospace, monospace; font-size: 13
 .map { height: 62vh; min-height: 380px; border-radius: 12px; border: 1px solid var(--line); z-index: 1; }
 .leaflet-draw-toolbar a { background-image: none !important; }
 
+/* peta utama full-bleed ala Google Earth */
+.hero-map-wrap { margin: 0 calc(50% - 50vw); position: relative; }
+#map-home { height: 78vh; min-height: 440px; border: none; border-radius: 0; z-index: 1; }
+.map-readout {
+  position: absolute; left: 12px; bottom: 28px; z-index: 600;
+  background: rgba(17,24,39,.82); color: #fff; font-size: 12.5px;
+  padding: 7px 12px; border-radius: 9px; pointer-events: none;
+  max-width: calc(100% - 24px);
+}
+.map-readout b { color: #a7f3d0; }
+.home-hint { text-align: center; margin: 14px auto 4px; max-width: 720px; }
+
 /* chart */
 #pf-chart-wrap { margin-top: 14px; }
 #pf-chart { display: block; cursor: crosshair; }
