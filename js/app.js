@@ -59,8 +59,14 @@
     });
     ensureInit(name);
     if (DRAW_TOOLS[name]) window[DRAW_TOOLS[name]].activate();
-    if (name === 'explore') closePanel();
-    else openPanel(name);
+    if (name === 'explore') {
+      // reset konten aktif ke Jelajah supaya panel tidak menampilkan sisa tab sebelumnya
+      document.querySelectorAll('.panel-sec').forEach(function (s) {
+        s.classList.toggle('active', s.dataset.panel === 'explore');
+      });
+      document.getElementById('panel-title').textContent = TITLES.explore;
+      closePanel();
+    } else openPanel(name);
   }
 
   // dipanggil tombol "📍 Ambil dari peta" di konverter

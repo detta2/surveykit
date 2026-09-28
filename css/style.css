@@ -192,6 +192,7 @@ textarea { resize: vertical; font-family: var(--mono); font-size: 12.5px; }
 }
 
 /* ---------- leaflet dark chrome ---------- */
+.leaflet-top.leaflet-left { top: 58px; } /* hindari tumpuk dengan brand-chip */
 .leaflet-bar a {
   background: var(--glass-2) !important; color: var(--ink) !important;
   border-bottom: 1px solid var(--stroke) !important;
