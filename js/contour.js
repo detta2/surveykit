@@ -1,39 +1,50 @@
-/* contour.js — Tool Kontur Otomatis: KONTUR MENGIKUTI TAMPILAN PETA (tanpa gambar) */
+/* contour.js — Tool Kontur: TANDAI DAERAHMU SENDIRI (klik -> pin, kotak ikut pin & bisa diubah) */
 (function () {
   'use strict';
   var G = window.Geo, K = window.Kml;
   var inited = false, active = false, map = null, drawn = null, contourLayer = null;
   var lastGrid = null, lastBbox = null;
-  var followTimer = null, lastViewKey = '', genSeq = 0;
+  var pin = null, box = null, sizeK = 1, genSeq = 0, regenTimer = null;
 
-  // bbox dari tampilan peta saat ini (dibatasi max 2 derajat agar DEM tidak overload)
-  function viewBbox() {
-    var b = map.getBounds(), c = b.getCenter();
-    var w = Math.min(b.getEast() - b.getWest(), 2);
-    var h = Math.min(b.getNorth() - b.getSouth(), 2);
-    return { west: c.lng - w / 2, east: c.lng + w / 2, south: c.lat - h / 2, north: c.lat + h / 2 };
+  // lebar kotak (derajat) mengikuti zoom x faktor ukuran pilihan user
+  function boxD() {
+    var d = 360 / Math.pow(2, map.getZoom()) * 1.5 * sizeK;
+    return Math.max(0.02, Math.min(2, d));
   }
-  function viewKey() {
-    var b = map.getBounds(), z = map.getZoom(), f = function (v) { return v.toFixed(2); };
-    return [f(b.getWest()), f(b.getSouth()), f(b.getEast()), f(b.getNorth()), z].join('|');
+  function currentBbox() {
+    var d = boxD(), ll = pin.getLatLng();
+    return { west: ll.lng - d / 2, east: ll.lng + d / 2, south: ll.lat - d / 2, north: ll.lat + d / 2 };
   }
-  function refresh() {
-    lastViewKey = viewKey();
-    var bbox = viewBbox();
-    drawn.clearLayers();
-    drawn.addLayer(L.rectangle(
-      [[bbox.south, bbox.west], [bbox.north, bbox.east]],
+  function drawBox() {
+    var b = currentBbox();
+    if (box) drawn.removeLayer(box);
+    box = L.rectangle(
+      [[b.south, b.west], [b.north, b.east]],
       { color: '#2563eb', weight: 2, dashArray: '6 4', fillOpacity: 0.03 }
-    ));
-    generate(bbox);
+    );
+    drawn.addLayer(box);
   }
-  function onMoveEnd() {
+  // user menandai daerahnya: pin jatuh di titik klik, kontur dibuat untuk daerah itu
+  function markAt(latlng) {
+    drawn.clearLayers();
+    pin = L.marker(latlng, { draggable: true, bubblingMouseEvents: false, title: 'Geser pin untuk memindah tanda' });
+    pin.on('drag', drawBox);
+    pin.on('dragend', scheduleRegen);
+    drawn.addLayer(pin);
+    drawBox();
+    generate(currentBbox());
+  }
+  function scheduleRegen() {
+    clearTimeout(regenTimer);
+    regenTimer = setTimeout(function () {
+      if (!active || !pin) return;
+      drawBox();
+      generate(currentBbox());
+    }, 700);
+  }
+  function onMapClick(e) {
     if (!active) return;
-    clearTimeout(followTimer);
-    followTimer = setTimeout(function () {
-      if (!active || viewKey() === lastViewKey) return;
-      refresh();
-    }, 900);
+    markAt(e.latlng); // klik = pindah tanda ke titik itu
   }
 
   function init(sharedMap) {
@@ -44,7 +55,16 @@
     document.getElementById('ct-interval').addEventListener('change', function () {
       if (lastGrid) renderContours(lastGrid, effectiveInterval(lastGrid));
     });
-    document.getElementById('ct-refresh').onclick = refresh;
+    document.getElementById('ct-bigger').onclick = function () {
+      if (!active || !pin) return;
+      sizeK = Math.min(4, sizeK * 1.5);
+      drawBox(); scheduleRegen();
+    };
+    document.getElementById('ct-smaller').onclick = function () {
+      if (!active || !pin) return;
+      sizeK = Math.max(0.25, sizeK / 1.5);
+      drawBox(); scheduleRegen();
+    };
     document.getElementById('ct-geojson').onclick = downloadGeoJSON;
     document.getElementById('ct-kml').onclick = downloadKML;
     document.getElementById('ct-clear').onclick = function () { drawn.clearLayers(); clearContours(); };
@@ -52,14 +72,17 @@
 
   function activate() {
     active = true;
-    lastViewKey = ''; // paksa generate ulang saat tab dibuka
-    map.on('moveend', onMoveEnd);
-    refresh();
+    map.on('click', onMapClick);
+    document.getElementById('map').style.cursor = 'crosshair';
+    if (!pin) {
+      document.getElementById('ct-info').innerHTML = '<p class="hint">👆 Klik peta untuk menandai daerahmu.</p>';
+    }
   }
   function deactivate() {
     active = false;
-    clearTimeout(followTimer);
-    map.off('moveend', onMoveEnd);
+    clearTimeout(regenTimer);
+    map.off('click', onMapClick);
+    document.getElementById('map').style.cursor = '';
   }
 
   // interval otomatis: target ~12 garis, dibulatkan ke 1/2/5 x 10^n
@@ -86,8 +109,9 @@
 
   function clearContours() {
     lastGrid = null; lastBbox = null;
+    pin = null; box = null; sizeK = 1;
     if (contourLayer) { map.removeLayer(contourLayer); contourLayer = null; }
-    document.getElementById('ct-info').innerHTML = '<p class="hint">Geser/zoom peta ke daerahmu — garis kontur otomatis dibuat mengikuti tampilan peta.</p>';
+    document.getElementById('ct-info').innerHTML = '<p class="hint">👆 Klik peta untuk menandai daerahmu.</p>';
     document.getElementById('ct-dl').style.display = 'none';
   }
 
