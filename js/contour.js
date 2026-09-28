@@ -1,32 +1,16 @@
-/* contour.js — Tool Kontur Otomatis: KLIK 1 TITIK di peta -> kontur area sekitarnya */
+/* contour.js — Tool Kontur Otomatis: TARIK KOTAK di peta -> kontur daerah itu */
 (function () {
   'use strict';
   var G = window.Geo, K = window.Kml;
-  var inited = false, active = false, map = null, drawn = null, contourLayer = null;
-  var lastGrid = null, lastBbox = null;
+  var inited = false, active = false, map = null, drawCtl = null, drawn = null, contourLayer = null;
+  var lastGrid = null, lastBbox = null, drawer = null;
 
-  // kotak otomatis di sekitar titik klik, ukuran menyesuaikan zoom (max 2 derajat)
-  function autoBbox(latlng) {
-    var d = 360 / Math.pow(2, map.getZoom()) * 1.5;
-    d = Math.max(0.02, Math.min(2, d));
-    return {
-      west: latlng.lng - d / 2, east: latlng.lng + d / 2,
-      south: latlng.lat - d / 2, north: latlng.lat + d / 2
-    };
-  }
-
-  function onMapClick(e) {
+  function onCreated(e) {
     if (!active) return;
-    var bbox = autoBbox(e.latlng);
     drawn.clearLayers();
-    drawn.addLayer(L.rectangle(
-      [[bbox.south, bbox.west], [bbox.north, bbox.east]],
-      { color: '#2563eb', weight: 2, fillOpacity: 0.05 }
-    ));
-    drawn.addLayer(L.circleMarker(e.latlng, {
-      radius: 6, color: '#ffffff', weight: 2, fillColor: '#2563eb', fillOpacity: 1
-    }));
-    generate(bbox);
+    drawn.addLayer(e.layer);
+    var b = e.layer.getBounds();
+    generate({ west: b.getWest(), south: b.getSouth(), east: b.getEast(), north: b.getNorth() });
   }
 
   function init(sharedMap) {
@@ -34,8 +18,18 @@
     map = sharedMap;
     drawn = new L.FeatureGroup();
     map.addLayer(drawn);
+    drawCtl = new L.Control.Draw({
+      draw: {
+        rectangle: { shapeOptions: { color: '#2563eb', weight: 2, fillOpacity: 0.05 } },
+        polyline: false, polygon: false, circle: false, marker: false, circlemarker: false
+      },
+      edit: { featureGroup: drawn }
+    });
+    map.on(L.Draw.Event.CREATED, onCreated);
+    map.on(L.Draw.Event.DELETED, function () { if (active) clearContours(); });
+    drawer = new L.Draw.Rectangle(map, { shapeOptions: { color: '#2563eb', weight: 2, fillOpacity: 0.05 } });
     document.getElementById('ct-interval').addEventListener('change', function () {
-      if (lastGrid) renderContours(lastGrid, parseFloat(this.value));
+      if (lastGrid) renderContours(lastGrid, effectiveInterval(lastGrid));
     });
     document.getElementById('ct-geojson').onclick = downloadGeoJSON;
     document.getElementById('ct-kml').onclick = downloadKML;
@@ -44,31 +38,51 @@
 
   function activate() {
     active = true;
-    map.off('click', onMapClick);
-    map.on('click', onMapClick);
-    document.getElementById('map').style.cursor = 'crosshair';
+    if (!drawCtl._map) map.addControl(drawCtl);
+    if (drawer) drawer.enable(); // langsung tarik kotak: lepas = kontur daerah itu dibuat
   }
   function deactivate() {
     active = false;
-    map.off('click', onMapClick);
-    document.getElementById('map').style.cursor = '';
+    if (drawer && drawer.enabled()) drawer.disable();
+    map.removeControl(drawCtl);
+  }
+
+  // interval otomatis: target ~12 garis, dibulatkan ke 1/2/5 x 10^n
+  function niceInterval(range) {
+    if (!(range > 0)) return 5;
+    var raw = range / 12;
+    var pow = Math.pow(10, Math.floor(Math.log10(raw)));
+    var n = raw / pow;
+    var snap = n >= 5 ? 10 : n >= 2 ? 5 : n >= 1 ? 2 : 1;
+    return Math.round(snap * pow * 100) / 100;
+  }
+  function gridRange(grid) {
+    var d = grid.data, mn = Infinity, mx = -Infinity, i;
+    for (i = 0; i < d.length; i++) { if (d[i] < mn) mn = d[i]; if (d[i] > mx) mx = d[i]; }
+    return { mn: mn, mx: mx };
+  }
+  function effectiveInterval(grid) {
+    if (document.getElementById('ct-interval').value === 'auto') {
+      var r = gridRange(grid);
+      return niceInterval(r.mx - r.mn);
+    }
+    return parseFloat(document.getElementById('ct-interval').value);
   }
 
   function clearContours() {
     lastGrid = null; lastBbox = null;
     if (contourLayer) { map.removeLayer(contourLayer); contourLayer = null; }
-    document.getElementById('ct-info').innerHTML = '<p class="hint">Klik satu titik di peta untuk membuat kontur daerah sekitarnya.</p>';
+    document.getElementById('ct-info').innerHTML = '<p class="hint">Tarik kotak di peta untuk memilih daerah — lepas, kontur langsung dibuat.</p>';
     document.getElementById('ct-dl').style.display = 'none';
   }
 
   function generate(bbox) {
     var info = document.getElementById('ct-info');
     info.innerHTML = '<p class="hint">⏳ Mengambil data DEM & menghitung kontur…</p>';
-    var interval = parseFloat(document.getElementById('ct-interval').value);
     var z = G.chooseZoomForBbox(bbox, 480);
     G.fetchElevationGrid(bbox, z).then(function (grid) {
       lastGrid = grid; lastBbox = bbox;
-      renderContours(grid, interval);
+      renderContours(grid, effectiveInterval(grid));
     }).catch(function (err) {
       info.innerHTML = '<p class="hint err-text">Gagal: ' + K.esc(err.message) + '</p>';
     });
