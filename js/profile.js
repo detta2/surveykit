@@ -31,6 +31,7 @@
     map = sharedMap;
     drawn = new L.FeatureGroup();
     map.addLayer(drawn);
+    if (window.LayerManager) LayerManager.register('Profil', drawn);
     document.getElementById('pf-csv').onclick = downloadCSV;
     document.getElementById('pf-kml').onclick = downloadKML;
     window.addEventListener('resize', function () { if (samples.length) drawChart(); });

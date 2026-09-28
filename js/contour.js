@@ -2,7 +2,8 @@
 (function () {
   'use strict';
   var G = window.Geo, K = window.Kml;
-  var inited = false, active = false, map = null, drawn = null, contourLayer = null, contourHalo = null;
+  var inited = false, active = false, map = null, drawn = null;
+  var contourGroup = null, contourLayer = null, contourRegId = null;
   var lastGrid = null, lastBbox = null;
   var pin = null, box = null, sizeK = 1, genSeq = 0, regenTimer = null;
 
@@ -52,6 +53,7 @@
     map = sharedMap;
     drawn = new L.FeatureGroup();
     map.addLayer(drawn);
+    contourGroup = L.layerGroup().addTo(map); // hasil kontur: didaftarkan ke Layer Manager
     document.getElementById('ct-interval').addEventListener('change', function () {
       if (lastGrid) renderContours(lastGrid, effectiveInterval(lastGrid));
     });
@@ -110,8 +112,8 @@
   function clearContours() {
     lastGrid = null; lastBbox = null;
     pin = null; box = null; sizeK = 1;
-    if (contourLayer) { map.removeLayer(contourLayer); contourLayer = null; }
-    if (contourHalo) { map.removeLayer(contourHalo); contourHalo = null; }
+    if (contourGroup) contourGroup.clearLayers();
+    contourLayer = null;
     document.getElementById('ct-info').innerHTML = '<p class="hint">👆 Klik peta untuk menandai daerahmu.</p>';
     document.getElementById('ct-dl').style.display = 'none';
   }
@@ -153,6 +155,20 @@
     return { mn: mn, mx: mx, mean: sum / n, relief: relief, slopeMean: sCnt ? sSum / sCnt : 0, slopeMax: sMax, medan: medan };
   }
 
+  // titik label: tengah ring terpanjang dari poligon terbesar (biar label nempel di garis)
+  function labelPoint(geom) {
+    if (!geom || !geom.coordinates || !geom.coordinates.length) return null;
+    var best = null, bestN = 0;
+    geom.coordinates.forEach(function (poly) {
+      poly.forEach(function (ring) {
+        if (ring.length > bestN) { bestN = ring.length; best = ring; }
+      });
+    });
+    if (!best) return null;
+    var p = best[Math.floor(best.length / 2)];
+    return [p[1], p[0]];
+  }
+
   function renderContours(grid, interval) {
     var d = grid.data, mn = Infinity, mx = -Infinity, i;
     for (i = 0; i < d.length; i++) { if (d[i] < mn) mn = d[i]; if (d[i] > mx) mx = d[i]; }
@@ -178,17 +194,16 @@
     });
     var fc = { type: 'FeatureCollection', features: features };
 
-    if (contourLayer) map.removeLayer(contourLayer);
-    if (contourHalo) map.removeLayer(contourHalo);
+    contourGroup.clearLayers();
     // halo putih di bawah garis: biar kontur tetap kebaca di atas citra satelit yang gelap/ramai
-    contourHalo = L.geoJSON(fc, {
+    var halo = L.geoJSON(fc, {
       interactive: false,
       style: function (f) {
         var isIndex = Math.abs(f.properties.elev / interval % 5) < 1e-6;
         return { color: '#ffffff', weight: (isIndex ? 2.4 : 1.3) + 3.2, opacity: 0.9, fill: false };
       }
-    }).addTo(map);
-    contourLayer = L.geoJSON(fc, {
+    });
+    var lines = L.geoJSON(fc, {
       style: function (f) {
         var isIndex = Math.abs(f.properties.elev / interval % 5) < 1e-6;
         return { color: isIndex ? '#b45309' : '#e8930c', weight: isIndex ? 2.4 : 1.3, opacity: 0.95, fill: false };
@@ -196,7 +211,27 @@
       onEachFeature: function (f, layer) {
         layer.bindPopup('<b>Kontur ' + G.fmtNum(f.properties.elev, 1) + ' m</b>');
       }
-    }).addTo(map);
+    });
+    // label angka elevasi di tiap garis, kayak peta topografi beneran
+    var labels = L.layerGroup();
+    if (features.length <= 80) {
+      features.forEach(function (f) {
+        var pt = labelPoint(f.geometry);
+        if (!pt) return;
+        L.marker(pt, {
+          icon: L.divIcon({
+            className: 'ct-label-wrap',
+            html: '<span class="ct-label">' + G.fmtNum(f.properties.elev, 0) + '</span>'
+          }),
+          interactive: false, keyboard: false
+        }).addTo(labels);
+      });
+    }
+    contourGroup.addLayer(halo);
+    contourGroup.addLayer(lines);
+    contourGroup.addLayer(labels);
+    contourLayer = lines;
+    if (!contourRegId && window.LayerManager) contourRegId = LayerManager.register('Kontur', contourGroup);
 
     var nLines = features.length;
     var st = gridStats(grid);

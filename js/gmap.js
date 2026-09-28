@@ -74,7 +74,7 @@
   }
 
   // ---- tombol "Lokasi saya": 1 tap ke posisi GPS ----
-  var gpsLayer = null;
+  var gpsLayer = null, gpsRegId = null;
   function initLocate(map) {
     var Locate = L.Control.extend({
       options: { position: 'bottomright' },
@@ -102,6 +102,7 @@
     toast('Mencari lokasi…');
     navigator.geolocation.getCurrentPosition(function (pos) {
       var ll = [pos.coords.latitude, pos.coords.longitude];
+      if (gpsRegId && window.LayerManager) LayerManager.unregister(gpsRegId);
       if (gpsLayer) map.removeLayer(gpsLayer);
       gpsLayer = L.layerGroup([
         L.circle(ll, {
@@ -113,6 +114,7 @@
           interactive: false, keyboard: false
         })
       ]).addTo(map);
+      if (window.LayerManager) gpsRegId = LayerManager.register('Lokasi saya', gpsLayer);
       map.flyTo(ll, Math.max(map.getZoom(), 15), { duration: 1.2 });
     }, function (err) {
       toast(err.code === 1
@@ -135,11 +137,55 @@
     var resBox = document.getElementById('sk-search-res');
     if (!wrap || !input) return;
     var markLayer = L.layerGroup().addTo(map);
+    if (window.LayerManager) LayerManager.register('Penanda pencarian', markLayer);
     var timer = null;
 
     function shortName(dn) { return String(dn).split(',')[0].trim(); }
 
+    // "Go to XY" ala ArcGIS: ketik koordinat desimal ("-6.2, 106.8") atau UTM ("48S 702305 9317059")
+    function parseCoord(q) {
+      var s = String(q || '').trim();
+      var m = s.match(/^(-?\d+(?:[.,]\d+)?)\s*[,;]\s*(-?\d+(?:[.,]\d+)?)$/) ||
+              s.match(/^(-?\d+(?:[.,]\d+)?)\s+(-?\d+(?:[.,]\d+)?)$/);
+      if (m) {
+        var lat = parseFloat(m[1].replace(',', '.')), lon = parseFloat(m[2].replace(',', '.'));
+        if (Math.abs(lat) <= 90 && Math.abs(lon) <= 180)
+          return { lat: lat, lon: lon, label: lat.toFixed(5) + ', ' + lon.toFixed(5) };
+      }
+      m = s.match(/^(\d{1,2})\s*([NSns])\s+(\d+(?:[.,]\d+)?)\s+(\d+(?:[.,]\d+)?)$/);
+      if (m && typeof proj4 === 'function') {
+        var zone = parseInt(m[1], 10), south = /s/i.test(m[2]);
+        var e = parseFloat(m[3].replace(',', '.')), n = parseFloat(m[4].replace(',', '.'));
+        if (zone >= 1 && zone <= 60 && e >= 0 && e <= 1000000 && n >= 0 && n <= 10000000) {
+          try {
+            var def = '+proj=utm +zone=' + zone + (south ? ' +south' : '') + ' +datum=WGS84 +units=m +no_defs';
+            var p = proj4(def, 'WGS84', [e, n]);
+            if (p && Math.abs(p[1]) <= 90 && Math.abs(p[0]) <= 180)
+              return { lat: p[1], lon: p[0], label: 'UTM ' + zone + m[2].toUpperCase() + ' ' + m[3] + ' ' + m[4] };
+          } catch (err) {}
+        }
+      }
+      return null;
+    }
+    function goToCoord(lat, lon, label) {
+      markLayer.clearLayers();
+      L.marker([lat, lon]).addTo(markLayer)
+        .bindTooltip(esc(label), { permanent: true, direction: 'top', offset: [0, -12], className: 'place-tip' });
+      map.flyTo([lat, lon], Math.max(map.getZoom(), 15), { duration: 1.2 });
+      resBox.style.display = 'none';
+      wrap.classList.remove('open');
+      input.blur();
+      toast('Koordinat: ' + label);
+    }
+
     function doSearch(q) {
+      var c = parseCoord(q);
+      if (c) {
+        resBox.innerHTML = '<div class="s-item" data-coord="1"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="width:13px;height:13px;vertical-align:-2px;margin-right:5px;color:var(--acc)"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg><b>' + esc(c.label) + '</b><span>Terbang ke koordinat</span></div>';
+        resBox.style.display = 'block';
+        resBox.querySelector('[data-coord]').onclick = function () { goToCoord(c.lat, c.lon, c.label); };
+        return;
+      }
       if (q.length < 3) { resBox.style.display = 'none'; resBox.innerHTML = ''; return; }
       resBox.innerHTML = '<div class="s-item s-loading">Mencari…</div>';
       resBox.style.display = 'block';

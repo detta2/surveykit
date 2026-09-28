@@ -28,6 +28,7 @@
     map = sharedMap;
     drawn = new L.FeatureGroup();
     map.addLayer(drawn);
+    if (window.LayerManager) LayerManager.register('Ukur Lahan', drawn);
     drawCtl = new L.Control.Draw({
       draw: {
         polygon: { shapeOptions: { color: '#16a34a', weight: 3 }, allowIntersection: false, showArea: true },

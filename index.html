@@ -23,9 +23,10 @@
   <button class="tool-btn" data-tool="profile" role="tab"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg></span><span class="lbl">Profil</span></button>
   <button class="tool-btn" data-tool="contour" role="tab"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c-4.2 0-7.5 4-7.5 9s3.3 9 7.5 9 7.5-4 7.5-9S16.2 3 12 3Z"/><path d="M12 7.2c-2.3 0-4.1 2.1-4.1 4.8s1.8 4.8 4.1 4.8 4.1-2.1 4.1-4.8-1.8-4.8-4.1-4.8Z"/><circle cx="12" cy="12" r="1" fill="currentColor" stroke="none"/></svg></span><span class="lbl">Kontur</span></button>
   <button class="tool-btn" data-tool="measure" role="tab"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21.3 15.3a2.4 2.4 0 0 1 0 3.4l-2.6 2.6a2.4 2.4 0 0 1-3.4 0L2.7 8.7a2.4 2.4 0 0 1 0-3.4l2.6-2.6a2.4 2.4 0 0 1 3.4 0Z"/><path d="m14.5 12.5 2-2"/><path d="m11.5 9.5 2-2"/><path d="m8.5 6.5 2-2"/><path d="m17.5 15.5 2-2"/></svg></span><span class="lbl">Ukur Lahan</span></button>
+  <button class="tool-btn" data-tool="layers" role="tab"><span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span><span class="lbl">Layer</span></button>
   <div class="tool-search" id="tool-search">
     <button class="s-toggle" id="sk-search-toggle" aria-label="Cari daerah"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg></button>
-    <input id="sk-search" type="search" placeholder="Cari daerah…" autocomplete="off" aria-label="Cari daerah">
+    <input id="sk-search" type="search" placeholder="Cari daerah / koordinat…" autocomplete="off" aria-label="Cari daerah atau koordinat">
     <div id="sk-search-res" class="s-res"></div>
   </div>
 </nav>
@@ -162,6 +163,27 @@
       </div>
     </section>
 
+    <section class="panel-sec" data-panel="layers">
+      <div class="card">
+        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg></span> Layer Manager</h2>
+        <p class="desc">Kelola semua layer di peta — tampil/sembunyi, transparansi, hapus.</p>
+        <div id="lyr-list"></div>
+        <div class="lyr-actions">
+          <label class="btn-file" title="Import SHP / KML / GeoJSON / GPX">＋ Import file<input type="file" id="lyr-file" accept=".geojson,.json,.kml,.gpx,.zip,.shp" multiple hidden></label>
+          <button class="btn secondary" id="lyr-export">⬇ Export PNG</button>
+        </div>
+        <p class="hint">Atau tarik & letakkan file peta (SHP/KML/GeoJSON/GPX) langsung ke atas peta.</p>
+      </div>
+      <div class="card">
+        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg></span> Bookmark</h2>
+        <div class="bm-add">
+          <input id="bm-name" type="text" placeholder="Nama lokasi…" maxlength="40" aria-label="Nama bookmark">
+          <button class="btn" id="bm-save">＋ Simpan view ini</button>
+        </div>
+        <div id="bm-list"></div>
+      </div>
+    </section>
+
   </div>
 </aside>
 
@@ -169,10 +191,14 @@
 <script src="https://cdn.jsdelivr.net/npm/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/proj4@2.11.0/dist/proj4.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mapbox/togeojson@0.16.0/togeojson.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/shpjs@4.0.4/dist/shp.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/leaflet-image@0.4.0/leaflet-image.js"></script>
 <script src="js/geo.js"></script>
 <script src="js/kml.js"></script>
 <script src="js/graticule.js"></script>
 <script src="js/gmap.js"></script>
+<script src="js/layers.js"></script>
 <script src="js/quickmeasure.js"></script>
 <script src="js/converter.js"></script>
 <script src="js/profile.js"></script>

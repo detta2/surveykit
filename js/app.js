@@ -13,7 +13,8 @@
     converter: 'Konverter Koordinat',
     profile: 'Profil Ketinggian',
     contour: 'Kontur',
-    measure: 'Ukur Lahan & Cut-Fill'
+    measure: 'Ukur Lahan & Cut-Fill',
+    layers: 'Layer & Import'
   };
 
   function fmt(n, d) {
@@ -107,6 +108,7 @@
 
   document.addEventListener('DOMContentLoaded', function () {
     map = window.GMap.init();
+    if (window.LayerManager) LayerManager.init(map);
     if (window.QuickMeasure) QuickMeasure.init(map);
     var readout = document.getElementById('coords');
     var defaultHint = readout.innerHTML;

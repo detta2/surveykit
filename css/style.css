@@ -381,3 +381,40 @@ textarea { resize: vertical; font-family: var(--mono); font-size: 12.5px; }
 .s-item.s-loading:hover { background: none; }
 .place-tip { background: rgba(13,20,34,.94) !important; border: 1px solid var(--stroke) !important; color: #fff !important; font-family: var(--font); font-weight: 700; font-size: 12.5px; border-radius: 10px; padding: 4px 10px; box-shadow: 0 6px 18px rgba(0,0,0,.4); }
 .place-tip::before { display: none; }
+
+/* ---------- Layer Manager (tab Layer) ---------- */
+#lyr-list { display: flex; flex-direction: column; gap: 6px; margin: 10px 0; }
+.lyr-row { display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+  background: rgba(255,255,255,.045); border: 1px solid var(--stroke-2); border-radius: var(--r-sm); }
+.lyr-row.off { opacity: .5; }
+.lyr-eye { background: none; border: none; color: var(--acc); cursor: pointer; padding: 2px; display: flex; flex: none; }
+.lyr-eye svg { width: 18px; height: 18px; }
+.lyr-name { flex: 1; font-size: 13px; font-weight: 650; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lyr-op { width: 72px; flex: none; accent-color: var(--acc); padding: 0; }
+.lyr-del { background: none; border: none; color: #f87171; cursor: pointer; font-size: 13px; padding: 2px 5px; flex: none; }
+.lyr-actions { display: flex; gap: 8px; margin: 10px 0 4px; flex-wrap: wrap; }
+.btn-file { cursor: pointer; display: inline-block; }
+.btn-file input { display: none; }
+/* drag & drop file ke peta */
+#map.drop-hi::after { content: 'Letakkan file peta di sini'; position: absolute; inset: 0; z-index: 1000;
+  display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 800; color: #fff;
+  background: rgba(56,189,248,.16); border: 3px dashed #38bdf8; border-radius: 12px; pointer-events: none; }
+
+/* ---------- Bookmark ---------- */
+.bm-add { display: flex; gap: 8px; margin: 8px 0 10px; }
+.bm-add input { flex: 1; }
+.bm-add .btn { flex: none; }
+#bm-list { display: flex; flex-direction: column; gap: 4px; }
+.bm-row { display: flex; align-items: center; gap: 4px; padding: 5px 8px;
+  background: rgba(255,255,255,.045); border: 1px solid var(--stroke-2); border-radius: var(--r-sm); }
+.bm-go { flex: 1; display: flex; align-items: center; gap: 8px; background: none; border: none;
+  color: var(--ink); cursor: pointer; font-size: 13px; font-weight: 600; text-align: left; padding: 3px; font-family: inherit; }
+.bm-go svg { width: 15px; height: 15px; color: var(--acc); flex: none; }
+.bm-go span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bm-del { background: none; border: none; color: #f87171; cursor: pointer; font-size: 12px; padding: 2px 5px; flex: none; }
+
+/* ---------- label angka elevasi di garis kontur ---------- */
+.ct-label-wrap { background: none; border: none; }
+.ct-label { display: inline-block; transform: translate(-50%, -50%); font-size: 10px; font-weight: 800;
+  color: #ffd9a0; background: rgba(11,21,38,.88); border: 1px solid rgba(232,147,12,.65);
+  border-radius: 8px; padding: 1px 6px; white-space: nowrap; font-family: var(--font); }
