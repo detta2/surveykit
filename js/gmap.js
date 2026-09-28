@@ -119,7 +119,7 @@
     }, function (err) {
       toast(err.code === 1
         ? 'Izin lokasi ditolak. Aktifkan GPS & izin lokasi dulu.'
-        : 'Gagal mendapatkan lokasi. Coba lagi.');
+        : 'Lokasinya nggak kedapetan. Coba lagi.');
     }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
   }
 

@@ -120,7 +120,7 @@
 
   function generate(bbox) {
     var info = document.getElementById('ct-info');
-    info.innerHTML = '<p class="hint">⏳ Mengambil data DEM & menghitung kontur…</p>';
+    info.innerHTML = '<p class="hint">⏳ Ambil data DEM & bikin kontur…</p>';
     var seq = ++genSeq;
     var z = G.chooseZoomForBbox(bbox, 480);
     G.fetchElevationGrid(bbox, z).then(function (grid) {
@@ -246,8 +246,8 @@
       '<div class="res-grid">' +
       '<div class="res"><span>📏 Luas area</span><b>' + areaTxt + '</b></div>' +
       '<div class="res"><span>📍 Elevasi titik tanda</span><b>' + (pin ? G.fmtNum(G.sampleGrid(grid, pin.getLatLng().lng, pin.getLatLng().lat), 1) + ' m' : '–') + '</b></div>' +
-      '<div class="res"><span>⛰️ Elevasi min</span><b>' + G.fmtNum(st.mn, 0) + ' m</b></div>' +
-      '<div class="res"><span>⛰️ Elevasi maks</span><b>' + G.fmtNum(st.mx, 0) + ' m</b></div>' +
+      '<div class="res"><span>⛰️ Elevasi terendah</span><b>' + G.fmtNum(st.mn, 0) + ' m</b></div>' +
+      '<div class="res"><span>⛰️ Elevasi tertinggi</span><b>' + G.fmtNum(st.mx, 0) + ' m</b></div>' +
       '<div class="res"><span>📊 Elevasi rata-rata</span><b>' + G.fmtNum(st.mean, 0) + ' m</b></div>' +
       '<div class="res"><span>📐 Beda tinggi</span><b>' + G.fmtNum(st.relief, 0) + ' m</b></div>' +
       '<div class="res"><span>〰️ Kemiringan rata-rata</span><b>' + G.fmtNum(st.slopeMean, 1) + ' %</b></div>' +

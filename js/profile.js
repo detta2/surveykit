@@ -22,7 +22,7 @@
       drawn.addLayer(L.polyline(pts, { color: '#e11d48', weight: 4 }));
       analyze(pts);
     } else {
-      document.getElementById('pf-stats').innerHTML = '<p class="hint">Titik A tercatat. Klik titik <b>B</b> untuk melihat profilnya.</p>';
+      document.getElementById('pf-stats').innerHTML = '<p class="hint">Titik A udah ditandai. Ketuk titik <b>B</b> buat liat profilnya.</p>';
     }
   }
 
@@ -54,7 +54,7 @@
     pts = [];
     drawn.clearLayers();
     document.getElementById('pf-chart-wrap').style.display = 'none';
-    document.getElementById('pf-stats').innerHTML = '<p class="hint">Klik 2 titik di peta: titik awal (A), lalu titik akhir (B).</p>';
+    document.getElementById('pf-stats').innerHTML = '<p class="hint">Ketuk 2 titik di peta: titik awal (A), terus titik akhir (B).</p>';
     document.getElementById('pf-dl').style.display = 'none';
     if (hoverMarker) { map.removeLayer(hoverMarker); hoverMarker = null; }
   }
@@ -81,7 +81,7 @@
 
   function analyze(latlngs) {
     var status = document.getElementById('pf-stats');
-    status.innerHTML = '<p class="hint">⏳ Mengambil data ketinggian…</p>';
+    status.innerHTML = '<p class="hint">⏳ Ambil data ketinggian…</p>';
     var total = G.polylineLength(latlngs);
     var n = Math.min(600, Math.max(80, Math.round(total / 30)));
     var sp = samplePoints(latlngs, n);
@@ -115,10 +115,10 @@
     document.getElementById('pf-stats').innerHTML =
       '<div class="res-grid">' +
       '<div class="res"><span>Jarak total</span><b>' + G.fmtDist(total) + '</b></div>' +
-      '<div class="res"><span>Elevasi min</span><b>' + G.fmtNum(mn, 1) + ' m</b></div>' +
-      '<div class="res"><span>Elevasi maks</span><b>' + G.fmtNum(mx, 1) + ' m</b></div>' +
+      '<div class="res"><span>Elevasi terendah</span><b>' + G.fmtNum(mn, 1) + ' m</b></div>' +
+      '<div class="res"><span>Elevasi tertinggi</span><b>' + G.fmtNum(mx, 1) + ' m</b></div>' +
       '<div class="res"><span>Beda tinggi</span><b>' + G.fmtNum(mx - mn, 1) + ' m</b></div>' +
-      '<div class="res"><span>Kemiringan maks</span><b>' + G.fmtNum(maxSlope, 1) + ' %</b></div>' +
+      '<div class="res"><span>Kemiringan terbesar</span><b>' + G.fmtNum(maxSlope, 1) + ' %</b></div>' +
       '</div>';
   }
 
@@ -192,10 +192,10 @@
     samples.forEach(function (p) {
       s += p.d.toFixed(1) + ';' + p.e.toFixed(2) + ';' + p.lat.toFixed(6) + ';' + p.lon.toFixed(6) + '\n';
     });
-    K.download('profil_ketinggian.csv', s, 'text/csv;charset=utf-8');
+    K.download('profil.csv', s, 'text/csv;charset=utf-8');
   }
   function downloadKML() {
-    K.download('profil_ketinggian.kml', K.build('Profil Ketinggian', [{
+    K.download('profil.kml', K.build('Profil Ketinggian', [{
       kind: 'line', name: 'Jalur Profil',
       coords: samples.filter(function (_, i) { return i % 5 === 0; }).map(function (p) { return [p.lon, p.lat]; }),
       desc: samples.length + ' titik sampel'

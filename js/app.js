@@ -11,10 +11,10 @@
   var TITLES = {
     explore: 'Jelajah',
     converter: 'Konverter Koordinat',
-    profile: 'Profil Ketinggian',
+    profile: 'Profil',
     contour: 'Kontur',
     measure: 'Ukur Lahan & Cut-Fill',
-    layers: 'Layer & Import'
+    layers: 'Layer'
   };
 
   function fmt(n, d) {

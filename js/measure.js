@@ -58,7 +58,7 @@
 
   function clearAll() {
     polyLL = null; demStats = null;
-    document.getElementById('ms-basic').innerHTML = '<p class="hint">Klik tiap sudut lahan di citra satelit, lalu tekan <b>✓ Selesai & Hitung</b>.</p>';
+    document.getElementById('ms-basic').innerHTML = '<p class="hint">Ketuk tiap sudut lahan di citra satelit, terus tekan <b>✓ Selesai & Hitung</b>.</p>';
     document.getElementById('ms-dem').innerHTML = '';
     document.getElementById('ms-cutfill').style.display = 'none';
   }
@@ -79,7 +79,7 @@
       '</div>' +
       '<div class="btn-row">' +
       '<button class="btn" id="ms-analyze">⛰️ Analisis Ketinggian (DEM)</button>' +
-      '<button class="btn secondary" id="ms-kml2">⬇ Unduh KML</button>' +
+      '<button class="btn secondary" id="ms-kml2">⬇ Simpan KML</button>' +
       '<button class="btn secondary" id="ms-clear">🗑 Hapus</button>' +
       '</div>';
     document.getElementById('ms-analyze').onclick = analyzeDEM;
@@ -91,7 +91,7 @@
 
   function analyzeDEM() {
     var info = document.getElementById('ms-dem');
-    info.innerHTML = '<p class="hint">⏳ Mengambil data DEM & menghitung…</p>';
+    info.innerHTML = '<p class="hint">⏳ Ambil data DEM & hitung…</p>';
     var lons = polyLL.map(function (p) { return p[0]; }), lats = polyLL.map(function (p) { return p[1]; });
     var bbox = {
       west: Math.min.apply(null, lons), east: Math.max.apply(null, lons),
@@ -123,10 +123,10 @@
       demStats = { min: mn, max: mx, avg: sum / cnt, elevs: elevs, cellM2: cellM2 * step * step };
       info.innerHTML =
         '<div class="res-grid">' +
-        '<div class="res"><span>Elevasi min</span><b>' + G.fmtNum(mn, 1) + ' m</b></div>' +
-        '<div class="res"><span>Elevasi maks</span><b>' + G.fmtNum(mx, 1) + ' m</b></div>' +
+        '<div class="res"><span>Elevasi terendah</span><b>' + G.fmtNum(mn, 1) + ' m</b></div>' +
+        '<div class="res"><span>Elevasi tertinggi</span><b>' + G.fmtNum(mx, 1) + ' m</b></div>' +
         '<div class="res"><span>Elevasi rata-rata</span><b>' + G.fmtNum(sum / cnt, 1) + ' m</b></div>' +
-        '<div class="res"><span>Sampel titik</span><b>' + G.fmtNum(cnt, 0) + '</b></div>' +
+        '<div class="res"><span>Jumlah titik</span><b>' + G.fmtNum(cnt, 0) + '</b></div>' +
         '</div>' +
         '<p class="hint">Resolusi DEM ~' + G.fmtNum(G.metersPerPixel(meanLat, z) * step, 0) + ' m/piksel. Estimasi kasar untuk survei awal — verifikasi dengan pengukuran lapangan.</p>';
       var cf = document.getElementById('ms-cutfill');
@@ -141,7 +141,7 @@
   function calcCutFill() {
     if (!demStats) return;
     var target = parseFloat(String(document.getElementById('ms-target').value).replace(',', '.'));
-    if (isNaN(target)) { alert('Masukkan elevasi rencana yang valid.'); return; }
+    if (isNaN(target)) { alert('Isi elevasi rencana yang bener.'); return; }
     var cut = 0, fill = 0;
     demStats.elevs.forEach(function (e) {
       if (e > target) cut += (e - target) * demStats.cellM2;

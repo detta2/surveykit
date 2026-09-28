@@ -43,7 +43,7 @@
 
     <section class="panel-sec" data-panel="explore">
       <div class="card">
-        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg></span> Jelajah Peta</h2>
+        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/><path d="M2 12h20"/></svg></span> Jelajah</h2>
         <p class="desc">Citra satelit seluruh Indonesia. <b>Cari daerah</b> di toolbar atas (cth: Lahat), atau klik titik mana saja untuk melihat koordinat.</p>
         <p class="hint">Pilih alat di toolbar atas, lalu <b>gambar langsung di peta ini</b>:</p>
         <ul class="tool-list">
@@ -81,7 +81,7 @@
         <div id="cv-out2" class="out"></div>
       </div>
       <div class="card">
-        <h2>📄 Konversi Batch (CSV)</h2>
+        <h2>📄 Konversi banyak titik (CSV)</h2>
         <p class="desc">Format: <code>nama;lintang;bujur</code> atau <code>nama;easting;northing;zona</code> (cth zona: 48S).</p>
         <div class="form-row">
           <label>Arah
@@ -100,16 +100,16 @@
 
     <section class="panel-sec" data-panel="profile">
       <div class="card">
-        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg></span> Profil Ketinggian</h2>
-        <p class="desc"><b>Klik 2 titik di peta</b>: titik awal (A), lalu titik akhir (B) — profil ketinggian garis lurus langsung dihitung dari DEM satelit (SRTM).</p>
+        <h2><span class="h-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg></span> Profil</h2>
+        <p class="desc"><b>Ketuk 2 titik di peta</b>: titik awal (A), terus titik akhir (B) — profil garis lurus langsung dihitung dari DEM satelit (SRTM).</p>
         <div id="pf-stats"><p class="hint">Klik 2 titik di peta: titik awal (A), lalu titik akhir (B).</p></div>
         <div id="pf-chart-wrap" style="display:none; position:relative;">
           <canvas id="pf-chart"></canvas>
           <div id="pf-tip" class="chart-tip" style="display:none;"></div>
         </div>
         <div id="pf-dl" class="btn-row" style="display:none; margin-top:12px;">
-          <button class="btn secondary" id="pf-csv">⬇ Unduh CSV</button>
-          <button class="btn secondary" id="pf-kml">⬇ Unduh KML</button>
+          <button class="btn secondary" id="pf-csv">⬇ Simpan CSV</button>
+          <button class="btn secondary" id="pf-kml">⬇ Simpan KML</button>
         </div>
       </div>
     </section>
@@ -137,8 +137,8 @@
         </div>
         <div id="ct-info"><p class="hint">👆 Klik peta untuk menandai daerahmu.</p></div>
         <div id="ct-dl" class="btn-row" style="display:none; margin-top:12px;">
-          <button class="btn secondary" id="ct-geojson">⬇ Unduh GeoJSON</button>
-          <button class="btn secondary" id="ct-kml">⬇ Unduh KML</button>
+          <button class="btn secondary" id="ct-geojson">⬇ Simpan GeoJSON</button>
+          <button class="btn secondary" id="ct-kml">⬇ Simpan KML</button>
         </div>
       </div>
     </section>

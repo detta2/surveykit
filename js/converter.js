@@ -173,12 +173,12 @@
     var lat = parseCoord(document.getElementById('cv-lat').value);
     var lon = parseCoord(document.getElementById('cv-lon').value);
     var out = document.getElementById('cv-out');
-    if (isNaN(lat) || isNaN(lon)) { out.innerHTML = '<p class="hint">Masukkan lintang & bujur yang valid.</p>'; return; }
+    if (isNaN(lat) || isNaN(lon)) { out.innerHTML = '<p class="hint">Isi lintang & bujur yang bener.</p>'; return; }
     if (Math.abs(lat) > 90 || Math.abs(lon) > 180) { out.innerHTML = '<p class="hint err-text">Lintang maks ±90, bujur maks ±180.</p>'; return; }
     lastSingle = { lat: lat, lon: lon }; lastReverse = null;
     var u = latLonToUtm(lat, lon);
     out.innerHTML = cardsHTML(lat, lon) +
-      '<button class="btn secondary" id="cv-kml1">⬇ Unduh KML titik ini</button>';
+      '<button class="btn secondary" id="cv-kml1">⬇ Simpan KML titik ini</button>';
     document.getElementById('cv-kml1').onclick = function () {
       K.download('titik.kml', K.build('Titik Konversi', [{
         kind: 'point', name: 'Titik', coords: [lon, lat],
@@ -192,12 +192,12 @@
     var n = parseFloat(String(document.getElementById('cv-n').value).replace(',', '.'));
     var zsel = document.getElementById('cv-zone').value; // "48S"
     var out = document.getElementById('cv-out2');
-    if (isNaN(e) || isNaN(n)) { out.innerHTML = '<p class="hint">Masukkan easting & northing yang valid.</p>'; return; }
+    if (isNaN(e) || isNaN(n)) { out.innerHTML = '<p class="hint">Isi easting & northing yang bener.</p>'; return; }
     var zone = parseInt(zsel, 10), south = zsel.slice(-1) === 'S';
     var ll = utmToLatLon(e, n, zone, south);
     lastReverse = { lat: ll.lat, lon: ll.lon }; lastSingle = null;
     out.innerHTML = cardsHTML(ll.lat, ll.lon) +
-      '<button class="btn secondary" id="cv-kml2">⬇ Unduh KML titik ini</button>';
+      '<button class="btn secondary" id="cv-kml2">⬇ Simpan KML titik ini</button>';
     document.getElementById('cv-kml2').onclick = function () {
       K.download('titik.kml', K.build('Titik Konversi', [{
         kind: 'point', name: 'Titik', coords: [ll.lon, ll.lat],
@@ -249,16 +249,16 @@
         batchRows.push({ name: c[0] || ('T' + (i + 1)), lat: ll.lat, lon: ll.lon, e: e, n: nn, z: zone + (south ? 'S' : 'N') });
       }
     }
-    if (!batchRows.length) { out.innerHTML = '<p class="hint err-text">Tidak ada baris valid. Format: nama;lintang;bujur atau nama;easting;northing;zona</p>'; return; }
-    var html = '<p class="ok-text">✔ ' + batchRows.length + ' titik berhasil' + (errs ? ', ' + errs + ' baris dilewati' : '') + '</p>';
+    if (!batchRows.length) { out.innerHTML = '<p class="hint err-text">Nggak ada baris yang valid. Format: nama;lintang;bujur atau nama;easting;northing;zona</p>'; return; }
+    var html = '<p class="ok-text">✔ ' + batchRows.length + ' titik beres' + (errs ? ', ' + errs + ' baris dilewati' : '') + '</p>';
     html += '<div class="tbl-wrap"><table class="tbl"><thead><tr><th>Nama</th><th>Lintang</th><th>Bujur</th><th>Easting</th><th>Northing</th><th>Zona</th></tr></thead><tbody>';
     batchRows.slice(0, 100).forEach(function (r) {
       html += '<tr><td>' + K.esc(r.name) + '</td><td>' + fmt(r.lat, 6) + '</td><td>' + fmt(r.lon, 6) + '</td><td>' + fmt(r.e) + '</td><td>' + fmt(r.n) + '</td><td>' + r.z + '</td></tr>';
     });
     html += '</tbody></table></div>';
     if (batchRows.length > 100) html += '<p class="hint">Menampilkan 100 dari ' + batchRows.length + ' baris.</p>';
-    html += '<div class="btn-row"><button class="btn secondary" id="cv-dl-csv">⬇ Unduh CSV</button>' +
-      '<button class="btn secondary" id="cv-dl-kml">⬇ Unduh KML</button></div>';
+    html += '<div class="btn-row"><button class="btn secondary" id="cv-dl-csv">⬇ Simpan CSV</button>' +
+      '<button class="btn secondary" id="cv-dl-kml">⬇ Simpan KML</button></div>';
     out.innerHTML = html;
     document.getElementById('cv-dl-csv').onclick = downloadBatchCSV;
     document.getElementById('cv-dl-kml').onclick = downloadBatchKML;
