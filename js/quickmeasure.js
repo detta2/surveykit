@@ -3,6 +3,7 @@
    Ketuk "Ukur jarak…" lagi untuk mulai pengukuran baru. */
 (function () {
   'use strict';
+  var G = window.Geo; // ikut konvensi modul lain (measure.js, profile.js, ...)
   var map = null, armed = false, layer = null;
 
   function init(m) { map = m; }
@@ -28,11 +29,11 @@
 
   function finish(bPt) {
     var aPt = layer._aPt;
-    var d = window.G.haversine(aPt.lat, aPt.lng, bPt.lat, bPt.lng);
+    var d = G.haversine(aPt.lat, aPt.lng, bPt.lat, bPt.lng);
     // casing gelap di bawah garis terang: tetap kebaca di citra satelit
     layer.addLayer(L.polyline([aPt, bPt], { color: '#0b1220', weight: 7, opacity: 0.55, interactive: false }));
     var line = L.polyline([aPt, bPt], { color: '#38bdf8', weight: 3.5, dashArray: '9 6' });
-    line.bindTooltip(window.G.fmtDist(d), { permanent: true, direction: 'center', className: 'qm-tip' });
+    line.bindTooltip(G.fmtDist(d), { permanent: true, direction: 'center', className: 'qm-tip' });
     layer.addLayer(line);
     layer.addLayer(L.circleMarker(bPt, { radius: 6, color: '#ffffff', weight: 2, fillColor: '#38bdf8', fillOpacity: 1 }));
     armed = false;
