@@ -56,6 +56,7 @@
       }
       return;
     }
+    if (window.QuickMeasure) QuickMeasure.clear(); // bersihkan ukur cepat saat ganti alat
     deactivateDraw();
     pickMode = false;
     current = name;
@@ -86,7 +87,7 @@
     var html;
     if (window.CoordFmt) {
       html = window.CoordFmt.popupHTML(latlng.lat, latlng.lng) +
-        '<br><span style="color:#6b7280;font-size:12px">Atur format di tab 📍 Koordinat</span>';
+        '<br><span style="color:#6b7280;font-size:12px">Atur format di tab Koordinat</span>';
     } else {
       var zone = utmZone(latlng.lng), south = latlng.lat < 0;
       var def = '+proj=utm +zone=' + zone + (south ? ' +south' : '') + ' +datum=WGS84 +units=m +no_defs';
@@ -95,11 +96,18 @@
         '<br><b>UTM:</b> ' + fmt(p[0], 1) + ' E, ' + fmt(p[1], 1) + ' N' +
         '<br><span style="color:#6b7280;font-size:12px">Zona ' + zone + (south ? 'S' : 'N') + '</span>';
     }
+    html += '<button class="qm-btn" type="button">Ukur jarak dari titik ini</button>';
     L.popup().setLatLng(latlng).setContent(html).openOn(map);
+    var qbtn = document.querySelector('.leaflet-popup-content .qm-btn');
+    if (qbtn) qbtn.addEventListener('click', function () {
+      map.closePopup();
+      if (window.QuickMeasure) QuickMeasure.arm(latlng);
+    });
   }
 
   document.addEventListener('DOMContentLoaded', function () {
     map = window.GMap.init();
+    if (window.QuickMeasure) QuickMeasure.init(map);
     var readout = document.getElementById('coords');
     var defaultHint = readout.innerHTML;
 
@@ -110,6 +118,7 @@
     });
 
     map.on('click', function (e) {
+      if (window.QuickMeasure && QuickMeasure.handleClick(e.latlng)) return; // ukur jarak cepat: titik B
       if (pickMode) {
         pickMode = false;
         document.getElementById('cv-lat').value = e.latlng.lat.toFixed(6);

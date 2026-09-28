@@ -53,8 +53,72 @@
     map.addControl(new Compass());
     L.control.scale({ imperial: false }).addTo(map);
     initSearch(map);
+    initLocate(map);
     setTimeout(function () { map.invalidateSize(); }, 120);
     return map;
+  }
+
+  // ---- toast kecil untuk pesan singkat ----
+  var toastTimer = null;
+  function toast(msg) {
+    var t = document.getElementById('sk-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'sk-toast';
+      document.body.appendChild(t);
+    }
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+  }
+
+  // ---- tombol "Lokasi saya": 1 tap ke posisi GPS ----
+  var gpsLayer = null;
+  function initLocate(map) {
+    var Locate = L.Control.extend({
+      options: { position: 'bottomright' },
+      onAdd: function () {
+        var el = L.DomUtil.create('div', 'locate-ctl glass');
+        el.title = 'Ke lokasi saya';
+        el.setAttribute('role', 'button');
+        el.setAttribute('tabindex', '0');
+        el.setAttribute('aria-label', 'Ke lokasi saya');
+        el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="22" x2="18" y1="12" y2="12"/><line x1="6" x2="2" y1="12" y2="12"/><line x1="12" x2="12" y1="6" y2="2"/><line x1="12" x2="12" y1="22" y2="18"/></svg>';
+        function go() { locateMe(map); }
+        L.DomEvent.on(el, 'click', function (e) { L.DomEvent.stopPropagation(e); go(); });
+        L.DomEvent.on(el, 'keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+        });
+        L.DomEvent.disableClickPropagation(el);
+        L.DomEvent.disableScrollPropagation(el);
+        return el;
+      }
+    });
+    map.addControl(new Locate());
+  }
+  function locateMe(map) {
+    if (!navigator.geolocation) { toast('Perangkat tidak mendukung GPS'); return; }
+    toast('Mencari lokasi…');
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      var ll = [pos.coords.latitude, pos.coords.longitude];
+      if (gpsLayer) map.removeLayer(gpsLayer);
+      gpsLayer = L.layerGroup([
+        L.circle(ll, {
+          radius: pos.coords.accuracy || 30, color: '#3b82f6', weight: 1.5,
+          opacity: 0.6, fillColor: '#3b82f6', fillOpacity: 0.12, interactive: false
+        }),
+        L.marker(ll, {
+          icon: L.divIcon({ className: 'gps-wrap', html: '<div class="gps-dot"></div>', iconSize: [22, 22], iconAnchor: [11, 11] }),
+          interactive: false, keyboard: false
+        })
+      ]).addTo(map);
+      map.flyTo(ll, Math.max(map.getZoom(), 15), { duration: 1.2 });
+    }, function (err) {
+      toast(err.code === 1
+        ? 'Izin lokasi ditolak. Aktifkan GPS & izin lokasi dulu.'
+        : 'Gagal mendapatkan lokasi. Coba lagi.');
+    }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 30000 });
   }
 
   function esc(s) {
@@ -140,6 +204,7 @@
 
   window.GMap = {
     init: init,
-    getMap: function () { return map; }
+    getMap: function () { return map; },
+    toast: toast
   };
 })();

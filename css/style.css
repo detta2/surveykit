@@ -254,6 +254,57 @@ textarea { resize: vertical; font-family: var(--mono); font-size: 12.5px; }
 .compass-ctl svg { display: block; }
 @keyframes compass-in { from { opacity: 0; transform: scale(0.6) rotate(-40deg); } }
 
+/* ---------- tombol "Lokasi saya" ---------- */
+.locate-ctl {
+  width: 44px; height: 44px; border-radius: 14px;
+  display: grid; place-items: center; cursor: pointer; color: var(--ink);
+}
+.locate-ctl svg { width: 21px; height: 21px; }
+.locate-ctl:active { transform: scale(0.94); }
+/* titik GPS berdenyut */
+.gps-wrap { background: none; border: none; }
+.gps-dot {
+  width: 16px; height: 16px; margin: 3px; border-radius: 50%;
+  background: #3b82f6; border: 3px solid #fff;
+  box-shadow: 0 0 0 4px rgba(59,130,246,.35); position: relative;
+}
+.gps-dot::after {
+  content: ''; position: absolute; inset: -3px; border-radius: 50%;
+  border: 2px solid rgba(59,130,246,.7);
+  animation: gps-ping 1.8s ease-out infinite;
+}
+@keyframes gps-ping {
+  0% { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(2.1); opacity: 0; }
+}
+/* toast pesan singkat */
+#sk-toast {
+  position: fixed; left: 50%; bottom: 92px; z-index: 2000;
+  transform: translateX(-50%) translateY(10px);
+  background: rgba(13,20,34,.95); border: 1px solid var(--stroke);
+  color: var(--ink); font-size: 13px; padding: 10px 18px; border-radius: 999px;
+  opacity: 0; pointer-events: none; transition: opacity .25s, transform .25s;
+  max-width: 86vw; text-align: center;
+}
+#sk-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* ukur jarak cepat */
+.qm-btn {
+  display: block; width: 100%; margin-top: 10px; padding: 9px 12px;
+  border: 0; border-radius: 10px; cursor: pointer;
+  background: linear-gradient(135deg, var(--acc), var(--acc-d));
+  color: var(--acc-ink); font: inherit; font-size: 13px; font-weight: 700;
+}
+.qm-btn:active { transform: scale(0.98); }
+.qm-tip {
+  background: rgba(13,20,34,.95) !important;
+  border: 1px solid rgba(56,189,248,.5) !important;
+  color: #7dd3fc !important;
+  font-family: var(--font); font-weight: 800; font-size: 13px;
+  border-radius: 10px; padding: 5px 12px;
+  box-shadow: 0 6px 18px rgba(0,0,0,.4);
+}
+.qm-tip::before { display: none; }
+
 /* ---------- chip label titik A/B ---------- */
 .leaflet-div-icon.pt-chip { background: none; border: none; }
 .pt-chip span {
@@ -295,6 +346,7 @@ textarea { resize: vertical; font-family: var(--mono); font-size: 12.5px; }
   #panel.open { transform: none; }
   .map-readout { bottom: auto; top: 14px; left: auto; right: 14px; font-size: 11px; }
   .leaflet-top.leaflet-right { top: 54px; } /* hindari tumpuk dengan readout koordinat */
+  .leaflet-bottom.leaflet-right { bottom: 84px; } /* tombol lokasi di atas toolbar bawah */
   .card { padding: 14px; }
   .form-row label { flex: 1 1 100%; }
 }
