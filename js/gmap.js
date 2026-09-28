@@ -29,6 +29,28 @@
     }).addTo(map);
     refLabels.addTo(map);
     grat.addTo(map);
+    // kompas arah (utara selalu ke atas di Leaflet)
+    var Compass = L.Control.extend({
+      options: { position: 'topright' },
+      onAdd: function () {
+        var el = L.DomUtil.create('div', 'compass-ctl');
+        el.title = 'Arah utara';
+        el.innerHTML =
+          '<svg viewBox="0 0 44 44" width="28" height="28" aria-hidden="true">' +
+          '<circle cx="22" cy="22" r="19" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="1.5"/>' +
+          '<text x="22" y="12.5" text-anchor="middle" font-size="8.5" font-weight="800" fill="#f87171" font-family="Inter,system-ui">N</text>' +
+          '<text x="34.5" y="25" text-anchor="middle" font-size="7" fill="#93a1b0" font-family="Inter,system-ui">E</text>' +
+          '<text x="22" y="37.5" text-anchor="middle" font-size="7" fill="#93a1b0" font-family="Inter,system-ui">S</text>' +
+          '<text x="9.5" y="25" text-anchor="middle" font-size="7" fill="#93a1b0" font-family="Inter,system-ui">W</text>' +
+          '<polygon points="22,15 25.5,24 22,22.4 18.5,24" fill="#f87171"/>' +
+          '<polygon points="22,31 25.5,24 22,25.6 18.5,24" fill="#cbd5e1"/>' +
+          '<circle cx="22" cy="24" r="2.4" fill="#0b1220" stroke="#e9f0f4" stroke-width="1.2"/>' +
+          '</svg>';
+        L.DomEvent.disableClickPropagation(el);
+        return el;
+      }
+    });
+    map.addControl(new Compass());
     L.control.scale({ imperial: false }).addTo(map);
     setTimeout(function () { map.invalidateSize(); }, 120);
     return map;

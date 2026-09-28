@@ -227,6 +227,17 @@ textarea { resize: vertical; font-family: var(--mono); font-size: 12.5px; }
 .leaflet-popup-tip { background: var(--glass-2) !important; border: 1px solid var(--stroke-2) !important; }
 .leaflet-popup-close-button { color: var(--mut) !important; top: 8px !important; right: 10px !important; }
 
+/* ---------- kompas ---------- */
+.compass-ctl {
+  width: 46px; height: 46px; display: grid; place-items: center; cursor: default;
+  background: var(--glass-2); border: 1px solid var(--stroke); border-radius: 13px;
+  -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  animation: compass-in 0.5s cubic-bezier(0.32, 0.72, 0.28, 1.4);
+}
+.compass-ctl svg { display: block; }
+@keyframes compass-in { from { opacity: 0; transform: scale(0.6) rotate(-40deg); } }
+
 /* ---------- label garis lintang/bujur ---------- */
 .leaflet-div-icon.grat-label {
   background: rgba(11, 18, 27, 0.72);
