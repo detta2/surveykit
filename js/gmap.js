@@ -18,7 +18,17 @@
     };
     map = L.map('map', { layers: [layers['Satelit']], zoomControl: true })
       .setView([-2.9, 104.7], 5);
-    L.control.layers(layers).addTo(map);
+    // overlay: nama daerah + batas wilayah (Esri), dan garis lintang/bujur
+    var refLabels = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Esri', maxZoom: 19
+    });
+    var grat = window.Graticule.make(map);
+    L.control.layers(layers, {
+      '🏷️ Nama daerah & batas': refLabels,
+      '🌐 Garis lintang/bujur': grat
+    }).addTo(map);
+    refLabels.addTo(map);
+    grat.addTo(map);
     L.control.scale({ imperial: false }).addTo(map);
     setTimeout(function () { map.invalidateSize(); }, 120);
     return map;

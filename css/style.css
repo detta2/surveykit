@@ -227,6 +227,15 @@ textarea { resize: vertical; font-family: var(--mono); font-size: 12.5px; }
 .leaflet-popup-tip { background: var(--glass-2) !important; border: 1px solid var(--stroke-2) !important; }
 .leaflet-popup-close-button { color: var(--mut) !important; top: 8px !important; right: 10px !important; }
 
+/* ---------- label garis lintang/bujur ---------- */
+.leaflet-div-icon.grat-label {
+  background: rgba(11, 18, 27, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #d9e8de; font-family: var(--mono); font-size: 10px; line-height: 1.7;
+  padding: 0 7px; border-radius: 6px; white-space: nowrap; width: auto !important; height: auto !important;
+  -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+
 /* ---------- mobile ---------- */
 @media (max-width: 760px) {
   .brand-chip span { display: none; }
