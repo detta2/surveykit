@@ -44,7 +44,7 @@
           <li>📐 <b>Ukur Lahan</b> — klik sudut-sudut batas lahan, tekan ✓ Selesai</li>
           <li>⛰️ <b>Profil</b> — klik 2 titik (A → B)</li>
           <li>🗺️ <b>Kontur</b> — tandai daerahmu (klik 1x), kotak bisa digeser</li>
-          <li>📍 <b>Koordinat</b> — konversi LatLon ↔ UTM</li>
+          <li>📍 <b>Koordinat</b> — konversi LatLon ↔ UTM/MGRS/Plus Code/dll</li>
         </ul>
       </div>
       <p class="fine">Data elevasi: SRTM via AWS Terrain Tiles · citra: Esri · peta: OpenStreetMap.<br>Hasil bersifat estimasi untuk survei awal.</p>
@@ -53,8 +53,9 @@
     <section class="panel-sec" data-panel="converter">
       <div class="card">
         <h2>📍 Konverter Koordinat</h2>
-        <p class="desc">Ubah Lintang/Bujur (desimal atau DMS) ↔ UTM. Zona terdeteksi otomatis dari bujur.</p>
-        <h3>LatLon → UTM</h3>
+        <p class="desc">Ubah Lintang/Bujur ↔ UTM, MGRS, Plus Code, Geohash, dll. Pilih format yang mau ditampilkan:</p>
+        <div class="fmt-chips" id="cv-fmts"></div>
+        <h3>LatLon → semua format</h3>
         <div class="form-row">
           <label>Lintang <input id="cv-lat" placeholder="cth: -6.2 atau 6°12'0&quot;S"></label>
           <label>Bujur <input id="cv-lon" placeholder="cth: 106.8 atau 106°48'0&quot;T"></label>
@@ -64,7 +65,7 @@
           <button class="btn secondary" id="cv-pick">📍 Ambil dari peta</button>
         </div>
         <div id="cv-out" class="out"></div>
-        <h3>UTM → LatLon</h3>
+        <h3>UTM → semua format</h3>
         <div class="form-row">
           <label>Easting (m) <input id="cv-e" placeholder="cth: 702345"></label>
           <label>Northing (m) <input id="cv-n" placeholder="cth: 9312345"></label>

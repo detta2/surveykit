@@ -48,6 +48,126 @@
 
   function fmt(v, d) { return G.fmtNum(v, d == null ? 3 : d); }
 
+  /* ---------- format koordinat tambahan (murni JS, tanpa API) ---------- */
+
+  // MGRS presisi 1 m: "48M YN 12345 67890"
+  function fmtMGRS(lat, lon) {
+    if (lat < -80 || lat > 84) return 'di luar jangkauan';
+    var u = latLonToUtm(lat, lon);
+    var bands = 'CDEFGHJKLMNPQRSTUVWX';
+    var band = bands[Math.floor((lat + 80) / 8)];
+    var eSets = ['ABCDEFGH', 'JKLMNPQR', 'STUVWXYZ'];
+    var nSets = ['ABCDEFGHJKLMNPQRSTUV', 'FGHJKLMNPQRSTUVABCDE'];
+    var e100k = eSets[(u.zone - 1) % 3][Math.floor(u.easting / 100000) - 1];
+    var n100k = nSets[u.zone % 2][Math.floor(u.northing / 100000) % 20];
+    function p5(v) { var s = String(Math.floor(v % 100000)); while (s.length < 5) s = '0' + s; return s; }
+    return u.zone + band + ' ' + e100k + n100k + ' ' + p5(u.easting) + ' ' + p5(u.northing);
+  }
+
+  // Plus Code (Open Location Code) 10 digit, cth: "6P3W2HMJ+MX"
+  function fmtPlus(lat, lon) {
+    var A = '23456789CFGHJMPQRVWX';
+    lat = Math.max(-90, Math.min(90, lat));
+    lon = ((lon + 180) % 360 + 360) % 360 - 180;
+    if (lat >= 90) lat = 90 - 1e-9;
+    var latN = lat + 90, lonN = lon + 180, code = '';
+    var latR = 20, lonR = 20, i, dLa, dLo;
+    for (i = 0; i < 5; i++) {
+      dLa = Math.min(19, Math.floor(latN / latR));
+      dLo = Math.min(19, Math.floor(lonN / lonR));
+      code += A[dLa] + A[dLo];
+      latN -= dLa * latR; lonN -= dLo * lonR;
+      latR /= 20; lonR /= 20;
+    }
+    return code.slice(0, 8) + '+' + code.slice(8);
+  }
+
+  // Geohash presisi 8 karakter
+  function fmtGeohash(lat, lon) {
+    var B32 = '0123456789bcdefghjkmnpqrstuvwxyz';
+    var latI = [-90, 90], lonI = [-180, 180];
+    var hash = '', even = true, bit = 0, ch = 0, mid;
+    while (hash.length < 8) {
+      if (even) {
+        mid = (lonI[0] + lonI[1]) / 2;
+        if (lon > mid) { ch |= (1 << (4 - bit)); lonI[0] = mid; } else { lonI[1] = mid; }
+      } else {
+        mid = (latI[0] + latI[1]) / 2;
+        if (lat > mid) { ch |= (1 << (4 - bit)); latI[0] = mid; } else { latI[1] = mid; }
+      }
+      even = !even;
+      if (bit < 4) { bit++; } else { hash += B32[ch]; bit = 0; ch = 0; }
+    }
+    return hash;
+  }
+
+  /* ---------- registry format + preferensi user ---------- */
+  var FORMATS = [
+    { id: 'dd', label: 'Desimal', fn: function (la, lo) { return fmt(la, 6) + '°, ' + fmt(lo, 6) + '°'; } },
+    { id: 'dms', label: 'DMS', fn: function (la, lo) { return toDMS(la, true) + ', ' + toDMS(lo, false); } },
+    {
+      id: 'utm', label: 'UTM', fn: function (la, lo) {
+        var u = latLonToUtm(la, lo);
+        return u.zone + (u.south ? 'S' : 'N') + ' · ' + fmt(u.easting, 1) + ' E / ' + fmt(u.northing, 1) + ' N';
+      }
+    },
+    { id: 'mgrs', label: 'MGRS', fn: fmtMGRS },
+    { id: 'plus', label: 'Plus Code', fn: fmtPlus },
+    { id: 'geohash', label: 'Geohash', fn: fmtGeohash }
+  ];
+  var LS_KEY = 'sk_cfmt';
+  function enabled() {
+    try {
+      var s = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+      if (Array.isArray(s)) {
+        var ok = s.filter(function (id) { return FORMATS.some(function (f) { return f.id === id; }); });
+        if (ok.length) return ok;
+      }
+    } catch (e) { /* abaikan */ }
+    return ['dd', 'dms', 'utm'];
+  }
+  function saveEnabled(ids) { try { localStorage.setItem(LS_KEY, JSON.stringify(ids)); } catch (e) { /* abaikan */ } }
+  function byId(id) { return FORMATS.filter(function (f) { return f.id === id; })[0]; }
+
+  function cardsHTML(lat, lon) {
+    var html = '<div class="res-grid">';
+    enabled().forEach(function (id) {
+      var f = byId(id);
+      if (f) html += '<div class="res"><span>' + f.label + '</span><b>' + f.fn(lat, lon) + '</b></div>';
+    });
+    return html + '</div>';
+  }
+  function popupHTML(lat, lon) {
+    return enabled().map(function (id) {
+      var f = byId(id);
+      return f ? '<b>' + f.label + ':</b> ' + f.fn(lat, lon) : '';
+    }).filter(Boolean).join('<br>');
+  }
+
+  var lastSingle = null, lastReverse = null;
+
+  function renderChips() {
+    var el = document.getElementById('cv-fmts');
+    if (!el) return;
+    var en = enabled();
+    el.innerHTML = FORMATS.map(function (f) {
+      return '<button type="button" class="fmt-chip' + (en.indexOf(f.id) >= 0 ? ' on' : '') + '" data-fmt="' + f.id + '">' + f.label + '</button>';
+    }).join('');
+    Array.prototype.forEach.call(el.querySelectorAll('.fmt-chip'), function (b) {
+      b.onclick = function () {
+        var id = b.getAttribute('data-fmt'), cur = enabled(), i = cur.indexOf(id);
+        if (i >= 0) { if (cur.length > 1) cur.splice(i, 1); } // minimal 1 format aktif
+        else cur.push(id);
+        saveEnabled(cur);
+        renderChips();
+        if (lastSingle) renderSingle();
+        if (lastReverse) renderReverse();
+      };
+    });
+  }
+
+  window.CoordFmt = { enabled: enabled, cardsHTML: cardsHTML, popupHTML: popupHTML, renderChips: renderChips };
+
   /* ---------- UI titik tunggal ---------- */
   function renderSingle() {
     var lat = parseCoord(document.getElementById('cv-lat').value);
@@ -55,14 +175,9 @@
     var out = document.getElementById('cv-out');
     if (isNaN(lat) || isNaN(lon)) { out.innerHTML = '<p class="hint">Masukkan lintang & bujur yang valid.</p>'; return; }
     if (Math.abs(lat) > 90 || Math.abs(lon) > 180) { out.innerHTML = '<p class="hint err-text">Lintang maks ±90, bujur maks ±180.</p>'; return; }
+    lastSingle = { lat: lat, lon: lon }; lastReverse = null;
     var u = latLonToUtm(lat, lon);
-    out.innerHTML =
-      '<div class="res-grid">' +
-      '<div class="res"><span>UTM Zone</span><b>' + u.zone + (u.south ? 'S' : 'N') + '</b></div>' +
-      '<div class="res"><span>Easting (m)</span><b>' + fmt(u.easting) + '</b></div>' +
-      '<div class="res"><span>Northing (m)</span><b>' + fmt(u.northing) + '</b></div>' +
-      '<div class="res"><span>DMS</span><b>' + toDMS(lat, true) + ', ' + toDMS(lon, false) + '</b></div>' +
-      '</div>' +
+    out.innerHTML = cardsHTML(lat, lon) +
       '<button class="btn secondary" id="cv-kml1">⬇ Unduh KML titik ini</button>';
     document.getElementById('cv-kml1').onclick = function () {
       K.download('titik.kml', K.build('Titik Konversi', [{
@@ -80,12 +195,8 @@
     if (isNaN(e) || isNaN(n)) { out.innerHTML = '<p class="hint">Masukkan easting & northing yang valid.</p>'; return; }
     var zone = parseInt(zsel, 10), south = zsel.slice(-1) === 'S';
     var ll = utmToLatLon(e, n, zone, south);
-    out.innerHTML =
-      '<div class="res-grid">' +
-      '<div class="res"><span>Lintang</span><b>' + fmt(ll.lat, 6) + '°</b></div>' +
-      '<div class="res"><span>Bujur</span><b>' + fmt(ll.lon, 6) + '°</b></div>' +
-      '<div class="res"><span>DMS</span><b>' + toDMS(ll.lat, true) + ', ' + toDMS(ll.lon, false) + '</b></div>' +
-      '</div>' +
+    lastReverse = { lat: ll.lat, lon: ll.lon }; lastSingle = null;
+    out.innerHTML = cardsHTML(ll.lat, ll.lon) +
       '<button class="btn secondary" id="cv-kml2">⬇ Unduh KML titik ini</button>';
     document.getElementById('cv-kml2').onclick = function () {
       K.download('titik.kml', K.build('Titik Konversi', [{
@@ -184,6 +295,7 @@
     }
     document.getElementById('cv-go1').onclick = renderSingle;
     document.getElementById('cv-go2').onclick = renderReverse;
+    renderChips();
     var pickBtn = document.getElementById('cv-pick');
     if (pickBtn) pickBtn.onclick = function () { if (window.AppPickCoord) window.AppPickCoord(); };
     document.getElementById('cv-run').onclick = runBatch;

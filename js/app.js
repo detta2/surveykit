@@ -83,14 +83,19 @@
   };
 
   function explorePopup(latlng) {
-    var zone = utmZone(latlng.lng), south = latlng.lat < 0;
-    var def = '+proj=utm +zone=' + zone + (south ? ' +south' : '') + ' +datum=WGS84 +units=m +no_defs';
-    var p = proj4('WGS84', def, [latlng.lng, latlng.lat]);
-    L.popup().setLatLng(latlng).setContent(
-      '<b>LatLon:</b> ' + fmt(latlng.lat) + ', ' + fmt(latlng.lng) +
-      '<br><b>UTM:</b> ' + fmt(p[0], 1) + ' E, ' + fmt(p[1], 1) + ' N' +
-      '<br><span style="color:#6b7280;font-size:12px">Zona ' + zone + (south ? 'S' : 'N') + '</span>'
-    ).openOn(map);
+    var html;
+    if (window.CoordFmt) {
+      html = window.CoordFmt.popupHTML(latlng.lat, latlng.lng) +
+        '<br><span style="color:#6b7280;font-size:12px">Atur format di tab 📍 Koordinat</span>';
+    } else {
+      var zone = utmZone(latlng.lng), south = latlng.lat < 0;
+      var def = '+proj=utm +zone=' + zone + (south ? ' +south' : '') + ' +datum=WGS84 +units=m +no_defs';
+      var p = proj4('WGS84', def, [latlng.lng, latlng.lat]);
+      html = '<b>LatLon:</b> ' + fmt(latlng.lat) + ', ' + fmt(latlng.lng) +
+        '<br><b>UTM:</b> ' + fmt(p[0], 1) + ' E, ' + fmt(p[1], 1) + ' N' +
+        '<br><span style="color:#6b7280;font-size:12px">Zona ' + zone + (south ? 'S' : 'N') + '</span>';
+    }
+    L.popup().setLatLng(latlng).setContent(html).openOn(map);
   }
 
   document.addEventListener('DOMContentLoaded', function () {
